@@ -35,7 +35,7 @@ conan_cmake_run(
   BUILD
   missing)
 
-# Add the include directory and external directory to the target
+# Add the include directory to the target
 target_include_directories(${PROJECT_NAME}
                            PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
@@ -45,14 +45,17 @@ target_link_libraries(
   PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp CONAN_PKG::opencv
           CONAN_PKG::tesseract CONAN_PKG::libarchive)
 
-# Make sure we copy our tesseract trained data after building This data came
-# from https://github.com/tesseract-ocr/tessdata
+# Copy the tesseract trained data to the build directory after building is
+# complete. This came from https://github.com/tesseract-ocr/tessdata
 add_custom_command(
   TARGET ${PROJECT_NAME}
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tessdata
           $<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata)
 
-# include(CTest) # This adds the BUILD_TESTING option (ON by default)
-# message("BUILD_TESTING: ${BUILD_TESTING}") if(BUILD_TESTING) enable_testing()
-# add_subdirectory(test ${PROJECT_BUILD_DIR}) endif()
+include(CTest) # This adds the BUILD_TESTING option (ON by default)
+message("BUILD_TESTING: ${BUILD_TESTING}")
+if(BUILD_TESTING)
+  enable_testing()
+  add_subdirectory(test)
+endif()
