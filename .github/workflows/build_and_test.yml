@@ -20,6 +20,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install Conan
+      env:
+        CC: ${{matrix.config.cc}}
+        CXX: ${{matrix.config.cxx}}
+      run: pip install conan
+
     - name: Create Build Environment
       env:
         CC: ${{matrix.config.cc}}
