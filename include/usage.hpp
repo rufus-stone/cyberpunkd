@@ -8,7 +8,7 @@ static constexpr auto usage =
 
 Use cyberpunkd to load a screenshot of the hacking mini-game and find the optimum solution
 You must specify the <path> to the folder containing your game screenshots
-If you are playing Cyberpunk 2077 through Steam, this will be: <path to Steam folder>/Steam/userdata/<your steam ID>/760/remote/730/screenshots
+If you are playing Cyberpunk 2077 through Steam, this will be: <path to Steam folder>/Steam/userdata/<your steam ID>/760/remote/<game ID>/screenshots
 
 Usage:
   cyberpunkd <path> [options] [--verbose | --quiet]

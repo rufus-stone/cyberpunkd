@@ -9,6 +9,8 @@ namespace pnkd
 auto is_valid_folder(std::filesystem::path const &dir) -> bool
 {
   spdlog::debug("Checking folder: {}", dir.string());
+  spdlog::debug("Absolute path: {}", std::filesystem::absolute(dir).string());
+
 
   // Does the path exist?
   if (!std::filesystem::exists(dir))
