@@ -3,6 +3,8 @@
 #include <string>
 #include <filesystem>
 
+#include <spdlog/spdlog.h>
+
 #include "catch.hpp"
 
 #include "file_utils.hpp"
@@ -10,6 +12,8 @@
 ////////////////////////////////////////////////////////////////
 SCENARIO("Tesseract trained data files", "[ocr][tessdata]")
 {
+  spdlog::set_level(spdlog::level::debug);
+
   GIVEN("A user-specified path to the tessdata folder")
   {
     WHEN(" the path is not a valid, extant directory")
