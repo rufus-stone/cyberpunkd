@@ -6,9 +6,9 @@
 namespace pnkd
 {
 
-auto is_valid_screenshot_folder(std::filesystem::path const &dir) -> bool
+auto is_valid_folder(std::filesystem::path const &dir) -> bool
 {
-  spdlog::debug("Checking screenshot folder: {}", dir.string());
+  spdlog::debug("Checking folder: {}", dir.string());
 
   // Does the path exist?
   if (!std::filesystem::exists(dir))
@@ -24,7 +24,7 @@ auto is_valid_screenshot_folder(std::filesystem::path const &dir) -> bool
     return false;
   }
 
-  spdlog::debug("[👍] Screenshot folder looks valid");
+  spdlog::debug("[👍] Folder looks valid");
 
   return true;
 }
@@ -55,7 +55,7 @@ auto get_path_to_latest_screenshot(std::filesystem::path const &dir) -> std::fil
     }
   }
 
-  // Did we find any files?
+  // Did we not find any files?
   if (files.empty())
   {
     spdlog::error("[❗] No files found: {}", dir.string());
@@ -72,7 +72,7 @@ auto get_path_to_latest_screenshot(std::filesystem::path const &dir) -> std::fil
 auto get_latest_screenshot(std::filesystem::path const &dir) -> cv::Mat
 {
   // Did the user pass a valid path to a folder?
-  if (!pnkd::is_valid_screenshot_folder(dir))
+  if (!pnkd::is_valid_folder(dir))
   {
     spdlog::error("[❗] Specified folder path appears invalid! : {}", dir.string());
     return cv::Mat{};
@@ -97,6 +97,64 @@ auto get_latest_screenshot(std::filesystem::path const &dir) -> cv::Mat
     spdlog::error("[❗] Failed to find screenshot file!");
     return cv::Mat{};
   }
+}
+
+
+auto contains_tessdata(std::filesystem::path const &dir) -> bool
+{
+  // Is the path specified a valid, extant folder?
+  if (!pnkd::is_valid_folder(dir))
+  {
+    spdlog::error("[❗] Invalid path given for tessdata folder: {}", dir.string());
+    return false;
+  }
+
+  // Is the folder empty?
+  if (std::filesystem::is_empty(dir))
+  {
+    spdlog::error("[❗] Specified tessdata folder is empty: {}", dir.string());
+    return false;
+  }
+
+  // List all the regular files in the directory
+  auto files = std::vector<std::filesystem::path>{};
+  for (auto const &entry : std::filesystem::directory_iterator(dir))
+  {
+    if (std::filesystem::is_regular_file(entry))
+    {
+      files.push_back(entry.path());
+    }
+  }
+
+  // Did we not find any files?
+  // This shouldn't happen as we've already checked the folder isn't empty, but just in case
+  if (files.empty())
+  {
+    spdlog::error("[❗] No files found: {}", dir.string());
+    return false;
+  }
+
+  // Lambda to check for the required tesseract trained data files
+  auto const file_exists = [&files](std::string const &filename) -> bool {
+    return (std::find_if(std::begin(files), std::end(files), [&filename](std::filesystem::path const &file) { return file.filename().string() == filename; }) != std::end(files));
+  };
+
+  // Does the folder contain the necessary files?
+  if (!file_exists("eng.traineddata"))
+  {
+    spdlog::error("[❗] Failed to find eng.traineddata in folder: {}", dir.string());
+    return false;
+  }
+
+  if (!file_exists("osd.traineddata"))
+  {
+    spdlog::error("[❗] Failed to find osd.traineddata in folder: {}", dir.string());
+    return false;
+  }
+
+  // If we get this far then we're good
+  spdlog::debug("[👍] Successfully found tesseract trained data files");
+  return true;
 }
 
 } // namespace pnkd

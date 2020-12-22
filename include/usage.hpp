@@ -14,10 +14,11 @@ Usage:
   cyberpunkd <path> [options] [--verbose | --quiet]
 
 Options:
-  -h, --help                    Show this screen
-  -v, --version                 Show app version
-  -V, --verbose                 Enable verbose logging (for debugging purposes - incompatible with quiet mode)
-  -q, --quiet                   Enable quiet mode. Only errors will be logged (incompatible with verbose mode)
+  -h, --help              Show this screen
+  -v, --version           Show app version
+  -V, --verbose           Enable verbose logging (for debugging purposes - incompatible with quiet mode)
+  -q, --quiet             Enable quiet mode. Only errors will be logged (incompatible with verbose mode)
+  -t, --tessdata <path>   Path to the folder containing tesseract trained data
 )";
 
 } // namespace pnkd

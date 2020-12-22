@@ -9,7 +9,7 @@ project(
   LANGUAGES CXX)
 
 # Create our executable
-add_executable(${PROJECT_NAME} src/main.cpp src/file_utils.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/file_utils.cpp src/ocr.cpp)
 
 # We're using C++17
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -24,10 +24,12 @@ include(${PROJECT_SOURCE_DIR}/cmake/conan.cmake)
 # Pull in the conan dependencies
 conan_cmake_run(
   REQUIRES
+  libarchive/3.4.3
+  libwebp/1.1.0
+  tesseract/4.1.1
+  opencv/4.5.0
   spdlog/1.8.2
   docopt.cpp/0.6.3
-  opencv/4.5.0
-  tesseract/4.1.1
   BASIC_SETUP
   CMAKE_TARGETS
   BUILD
@@ -39,15 +41,18 @@ target_include_directories(${PROJECT_NAME}
 
 # Link libraries to executable
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp
-                          CONAN_PKG::opencv)
+  ${PROJECT_NAME}
+  PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp CONAN_PKG::opencv
+          CONAN_PKG::tesseract CONAN_PKG::libarchive)
+
+# Make sure we copy our tesseract trained data after building This data came
+# from https://github.com/tesseract-ocr/tessdata
+add_custom_command(
+  TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tessdata
+          $<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata)
 
 # include(CTest) # This adds the BUILD_TESTING option (ON by default)
 # message("BUILD_TESTING: ${BUILD_TESTING}") if(BUILD_TESTING) enable_testing()
 # add_subdirectory(test ${PROJECT_BUILD_DIR}) endif()
-message("OpenCV library status:")
-message("          config: ${OpenCV_DIR}")
-message("         version: ${OpenCV_VERSION}")
-message("       libraries: ${OpenCV_LIBS}")
-message("    include path: ${OpenCV_INCLUDE_DIRS}")
-message("      source dir: ${OpenCV_SOURCE_DIR}")
