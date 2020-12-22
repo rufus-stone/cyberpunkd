@@ -69,7 +69,7 @@ int main(int argc, const char **argv)
 
   // Perform OCR
   auto const img_text = pnkd::get_string_from_image(img, tessdata_dir);
-  spdlog::debug(img_text);
+  spdlog::info("OCR:\n\n{}\n", img_text);
 
   // Did the OCR generate any text?
   if (img_text.empty())
