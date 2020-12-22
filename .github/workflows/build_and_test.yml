@@ -12,10 +12,10 @@ jobs:
     strategy:
       matrix:
         config:
-          - {name: ubuntu-gcc-9, os: ubuntu-latest, build_type: Release, cc: gcc-9, cxx: g++-9}
+          - {name: ubuntu-gcc-9, os: ubuntu-latest, build_type: Release, cc: gcc-10, cxx: g++-10} # This is failing with gcc-9 / g++-9 due to some esoteric linker error?? Clang works fine though...
           - {name: ubuntu-clang-9, os: ubuntu-latest, build_type: Release, cc: clang-9, cxx: clang++-9}
           - {name: windows-latest, os: windows-latest, build_type: Release, cc: cl, cxx: cl}
-      fail-fast: false
+      fail-fast: true
 
     steps:
     - uses: actions/checkout@v2
@@ -59,4 +59,4 @@ jobs:
       if: ${{matrix.config.os == 'windows-latest'}}
       working-directory: ${{runner.workspace}}
       shell: bash
-      run: ${{runner.workspace}}/build/bin/cyberpunkd_tests.exe
+      run: ${{runner.workspace}}\build\bin\cyberpunkd_tests.exe
