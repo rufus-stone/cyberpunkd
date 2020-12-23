@@ -67,6 +67,17 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
+  /*
+  for (auto const &img : pnkd::get_all_screenshots(path))
+  {
+    // Perform OCR
+    auto const img_text = pnkd::get_string_from_image(img, tessdata_dir);
+    spdlog::info("OCR:\n\n{}\n", img_text);
+  }
+
+  return EXIT_SUCCESS;
+  */
+
   // Perform OCR
   auto const img_text = pnkd::get_string_from_image(img, tessdata_dir);
   spdlog::info("OCR:\n\n{}\n", img_text);

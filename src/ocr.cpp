@@ -4,6 +4,8 @@
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
 
+#include "utils.hpp"
+
 namespace pnkd
 {
 
@@ -37,39 +39,41 @@ auto preprocess_image(cv::Mat const &raw_img) -> cv::Mat
   output = output(roi);
 
   // Increase the image size
-  cv::resize(output, output, cv::Size{}, 2, 2);
+  //cv::resize(output, output, cv::Size{}, 2, 2);
 
   // Erode slightly - this seems to improve OCR accuracy
-  std::size_t constexpr erosion_size = 1;
-  auto kern = cv::getStructuringElement(cv::MORPH_ELLIPSE, // MORPH_RECT / MORPH_CROSS / MORPH_ELLIPSE
-    cv::Size{2 * erosion_size + 1, 2 * erosion_size + 1});
+  //std::size_t constexpr erosion_size = 0;
+  //auto kern = cv::getStructuringElement(cv::MORPH_ELLIPSE, // MORPH_RECT / MORPH_CROSS / MORPH_ELLIPSE
+  //  cv::Size{2 * erosion_size + 1, 2 * erosion_size + 1});
 
   //cv::dilate(output, output, kern);
-  cv::erode(output, output, kern);
+  //cv::erode(output, output, kern);
 
-  cv::imshow("Pre-proc", output);
-  cv::waitKey();
+  //cv::imshow("Pre-proc", output);
+  //cv::waitKey();
   return output;
 }
 
 
-auto get_string_from_image(cv::Mat const &raw_img, std::string tessdata_path) -> std::string
+auto get_string_from_image(cv::Mat const &raw_img, std::string const &tessdata_path) -> std::string
 {
   cv::Mat img = preprocess_image(raw_img);
 
   std::size_t constexpr bytes_per_pixel = 1; // Our preprocessed image is black and white, so only 1 byte. Set this to 3 for RGB, etc.
 
   auto ocr = std::make_unique<tesseract::TessBaseAPI>();
-  ocr->Init(tessdata_path.c_str(), "eng", tesseract::OEM_LSTM_ONLY);
+  ocr->Init(tessdata_path.c_str(), "eng", tesseract::OEM_TESSERACT_ONLY); // tesseract::OEM_LSTM_ONLY
 
   ocr->SetImage(img.data, img.cols, img.rows, bytes_per_pixel, img.step);
   ocr->SetSourceResolution(300);
 
+  ocr->SetVariable("tessedit_char_whitelist", "BD5E91C \n");
+
   auto const img_text = std::string{ocr->GetUTF8Text()};
 
-  ocr->End(); // Is this needed if we're using unique_ptr??
+  ocr->End();
 
-  return img_text;
+  return pnkd::strip(img_text);
 }
 
 } // namespace pnkd
