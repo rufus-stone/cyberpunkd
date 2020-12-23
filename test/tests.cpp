@@ -4,11 +4,14 @@
 #include <filesystem>
 
 #include <spdlog/spdlog.h>
+#include <opencv2/opencv.hpp>
 
 #include "catch.hpp"
 
 #include "file_utils.hpp"
 #include "ocr.hpp"
+
+#include "sample_image.hpp"
 
 ////////////////////////////////////////////////////////////////
 SCENARIO("Tesseract trained data files", "[ocr][tessdata]")
@@ -35,7 +38,7 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 
   GIVEN("A valid sample image")
   {
-    cv::Mat img = pnkd::get_latest_screenshot("screenshots");
+    cv::Mat img = cv::imdecode(pnkd::sample_img, cv::IMREAD_COLOR);
 
     WHEN(" the grid is fed to Tesseract")
     {
@@ -44,7 +47,7 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
       THEN(" the correct text is identified")
       {
         spdlog::info("OCR:\n\n{}\n", img_text);
-        REQUIRE(img_text == "BD E9 1C 1C 55\n1C BC 55 E9 BD\n55 1C 1C 55 1C\n55 1C BC 55 1C\n55 1C BC 1C BC");
+        REQUIRE(img_text == "1C 55 1C 1C 1C\n1C 1C 55 BD 1C\n55 55 BD E9 1C\nBC 1C 1C 1C 55\nE9 1C 55 E9 1C");
       }
     }
   }
