@@ -107,10 +107,25 @@ int main(int argc, const char **argv)
   }
 
   // Parse OCR'd text
-  auto const goals = pnkd::split(goal_text, "\n");
+  auto goals = std::vector<std::queue<std::string>>{};
+  auto const goals_lines = pnkd::split(goal_text, "\n");
+  for (auto const &goal : goals_lines)
+  {
+    auto const segments = pnkd::split(goal, " ");
 
-  // TODO: Solve paths
-  auto const solutions = pnkd::solve_paths(grid, goals, buffer_size);
+    auto this_goal = std::queue<std::string>{};
+    for (auto const &segment : segments)
+    {
+      this_goal.push(segment);
+    }
+
+    goals.push_back(this_goal);
+  }
+
+
+  // Solve paths
+  auto const puzzler = pnkd::puzzler{grid, goals, buffer_size};
+  auto const solutions = puzzler.solve();
 
   // TODO: Message user with solution (Discord bot?)
   //}
