@@ -20,3 +20,9 @@ target_link_libraries(
           CONAN_PKG::tesseract CONAN_PKG::libarchive)
 
 message("PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
+
+add_custom_command(
+  TARGET cyberpunkd_tests
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tessdata
+          $<TARGET_FILE_DIR:cyberpunkd_tests>/tessdata)
