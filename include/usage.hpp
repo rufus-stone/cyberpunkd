@@ -8,11 +8,12 @@ static constexpr auto usage =
   Because the real hacking mini-game is hacking the hacking mini-game.
 
 Use cyberpunkd to load a screenshot of the hacking mini-game and find the optimum solution
-You must specify the <path> to the folder containing your game screenshots
+You must specify the current <buffer_size> of your in-game OS (this must be a numerical value), and the <path> to the folder containing your game screenshots
 If you are playing Cyberpunk 2077 through Steam, this will likely be: <path to Steam folder>/Steam/userdata/<your steam ID>/760/remote/<game ID>/screenshots
+For improved OCR accuracy, set your Steam screenshots to keep an uncompressed copy and point cyberpunkd to this location instead.
 
 Usage:
-  cyberpunkd <path> [options] [--verbose | --quiet]
+  cyberpunkd <buffer_size> <path> [options] [--verbose | --quiet]
 
 Options:
   -h, --help              Show this screen

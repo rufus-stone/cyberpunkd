@@ -9,7 +9,8 @@ project(
   LANGUAGES CXX)
 
 # Create our executable
-add_executable(${PROJECT_NAME} src/main.cpp src/file_utils.cpp src/ocr.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/file_utils.cpp src/ocr.cpp
+                               src/puzzler.cpp src/string_utils.cpp)
 
 # We're using C++17
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

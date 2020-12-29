@@ -38,7 +38,7 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 
   GIVEN("A valid sample image")
   {
-    cv::Mat img = cv::imdecode(pnkd::sample_img, cv::IMREAD_COLOR);
+    cv::Mat img = cv::imdecode(cv::InputArray{pnkd::sample_img, pnkd::sample_img_size}, cv::IMREAD_COLOR);
 
     WHEN(" the grid is fed to Tesseract")
     {

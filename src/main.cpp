@@ -1,4 +1,5 @@
 #include <sstream>
+#include <queue>
 
 #include <spdlog/spdlog.h>
 #include <docopt/docopt.h>
@@ -6,7 +7,9 @@
 
 #include "usage.hpp"
 #include "file_utils.hpp"
+#include "string_utils.hpp"
 #include "ocr.hpp"
+#include "puzzler.hpp"
 
 int main(int argc, const char **argv)
 {
@@ -43,6 +46,10 @@ int main(int argc, const char **argv)
     spdlog::debug("{}: {}", arg.first, ss.str());
   }
 
+  // Get the buffer size screenshots folder
+  std::size_t const buffer_size = static_cast<std::size_t>(args.at("<buffer_size>").asLong());
+  spdlog::info("Buffer size: {}", buffer_size);
+
   // Get the user-specified path to the screenshots folder
   std::string const path = args.at("<path>").asString();
 
@@ -67,33 +74,46 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
-  /*
-  for (auto const &img : pnkd::get_all_screenshots(path))
-  {
-    // Perform OCR
-    auto const img_text = pnkd::get_string_from_image(img, tessdata_dir);
-    spdlog::info("OCR:\n\n{}\n", img_text);
-  }
-
-  return EXIT_SUCCESS;
-  */
-
+  //for (auto const &img : pnkd::get_all_screenshots(path))
+  //{
   // Perform OCR
-  auto const img_text = pnkd::get_string_from_image(img, tessdata_dir);
-  spdlog::info("OCR:\n\n{}\n", img_text);
+  // --------------------------
+  // Get the text from the grid
+  // --------------------------
+  auto const grid_text = pnkd::get_string_from_grid(img, tessdata_dir); //pnkd::get_string_from_image(img, tessdata_dir);
+  spdlog::info("grid_text:\n\n{}\n", grid_text);
 
   // Did the OCR generate any text?
-  if (img_text.empty())
+  if (grid_text.empty())
   {
-    spdlog::error("[❗] Failed to extract any text from image!");
+    spdlog::error("[❗] Failed to extract any text from grid!");
     return EXIT_FAILURE;
   }
 
-  // TODO: Parse OCR'd text
+  // Parse OCR'd text
+  auto const grid = pnkd::split(grid_text, "\n ");
+
+  // ---------------------------
+  // Get the text from the goals
+  // ---------------------------
+  auto const goal_text = pnkd::get_string_from_goals(img, tessdata_dir);
+  spdlog::info("goal_text:\n\n{}\n", goal_text);
+
+  // Did the OCR generate any text?
+  if (goal_text.empty())
+  {
+    spdlog::error("[❗] Failed to extract any text from goals!");
+    return EXIT_FAILURE;
+  }
+
+  // Parse OCR'd text
+  auto const goals = pnkd::split(goal_text, "\n");
 
   // TODO: Solve paths
+  auto const solutions = pnkd::solve_paths(grid, goals, buffer_size);
 
   // TODO: Message user with solution (Discord bot?)
+  //}
 
   return EXIT_SUCCESS;
 }
