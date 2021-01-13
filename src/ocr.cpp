@@ -6,7 +6,7 @@
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
 
-#include "string_utils.hpp"
+#include "utils/string_utils.hpp"
 
 namespace pnkd
 {

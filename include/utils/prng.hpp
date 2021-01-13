@@ -5,7 +5,7 @@
 
 namespace pnkd::prng
 {
-// We can reuse the random engine, so declare once statically here
+
 static std::mt19937 random_engine{std::random_device{}()};
 
 ////////////////////////////////////////////////////////////

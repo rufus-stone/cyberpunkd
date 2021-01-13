@@ -6,10 +6,12 @@
 #include <opencv2/opencv.hpp>
 
 #include "usage.hpp"
-#include "file_utils.hpp"
-#include "string_utils.hpp"
+#include "utils/file_utils.hpp"
+#include "utils/string_utils.hpp"
 #include "ocr.hpp"
-#include "puzzler.hpp"
+#include "game/puzzler.hpp"
+#include "game/state.hpp"
+#include "game/goal.hpp"
 
 int main(int argc, const char **argv)
 {
@@ -90,7 +92,7 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
-  // Parse OCR'd text
+  // Parse grid OCR text
   auto const grid = pnkd::split(grid_text, "\n ");
 
   // ---------------------------
@@ -106,29 +108,47 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
-  // Parse OCR'd text
-  auto goals = std::vector<std::queue<std::string>>{};
+  // Parse goals OCR text
+  auto goal_list = pnkd::goal_list_t{}; //std::vector<pnkd::goal_t>{};
   auto const goals_lines = pnkd::split(goal_text, "\n");
   for (auto const &goal : goals_lines)
   {
     auto const segments = pnkd::split(goal, " ");
 
     auto this_goal = std::queue<std::string>{};
+
+    auto tmp = std::string{};
     for (auto const &segment : segments)
     {
-      this_goal.push(segment);
+      // The OCR sometimes confuses 1C for 1D, so fix this if needed
+      if (segment == "1D")
+      {
+        this_goal.push("1C");
+        tmp += "1C ";
+      } else
+      {
+        this_goal.push(segment);
+        tmp = tmp + segment + " ";
+      }
     }
 
-    goals.push_back(this_goal);
+    tmp = pnkd::strip(tmp);
+    goal_list.emplace_back(pnkd::goal_t{this_goal, tmp});
   }
 
+  for (auto const &goal : goal_list)
+  {
+    spdlog::info(goal.str());
+  }
 
-  // Solve paths
-  auto const puzzler = pnkd::puzzler{grid, goals, buffer_size};
-  auto const solutions = puzzler.solve();
+  // Create our initial game state
+  auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
 
-  // TODO: Message user with solution (Discord bot?)
-  //}
+  // Create a puzzler and solve
+  auto puzzler = pnkd::puzzler{initial_state};
+  puzzler.solve();
+
+  // TODO: Show optimal solution
 
   return EXIT_SUCCESS;
 }
