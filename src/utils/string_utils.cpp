@@ -46,26 +46,4 @@ auto split(std::string const &input, std::string const &delimiters) -> std::vect
   return segments;
 }
 
-auto route_to_string(std::vector<std::size_t> const &route) -> std::string
-{
-  if (route.empty())
-  {
-    return "No route taken";
-  }
-
-  auto ss = std::stringstream{};
-
-  ss << route[0];
-
-  if (route.size() > 1)
-  {
-    for (std::size_t i = 1; i < route.size(); ++i)
-    {
-      ss << " -> " << route[i];
-    }
-  }
-
-  return ss.str();
-}
-
 } // namespace pnkd

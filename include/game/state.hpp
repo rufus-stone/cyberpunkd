@@ -5,9 +5,11 @@
 #include <vector>
 #include <bitset>
 #include <queue>
+#include <optional>
 
 #include "game/point.hpp"
 #include "game/goal.hpp"
+#include "game/route.hpp"
 
 #include "utils/uuid.hpp"
 
@@ -19,10 +21,7 @@ class game_state_t
   static constexpr std::size_t max_grid_size = 36;
   static constexpr std::size_t max_goals = 5;
 
-  //using goal_list_t = std::vector<pnkd::goal_t>;
-
   using grid_t = std::vector<std::string>;
-  using route_t = std::vector<std::size_t>;
   using move_history_t = std::bitset<max_grid_size>;
 
 private:
@@ -52,6 +51,9 @@ public:
 
   auto is_valid_move(std::size_t const pos) const -> bool;
   auto list_all_valid_moves() const -> std::vector<std::size_t>;
+
+  auto make_move(std::size_t const move) const -> std::optional<game_state_t>;
+
   auto score_goals(std::size_t const move) const -> goal_list_t;
   auto make_all_valid_moves() const -> std::vector<game_state_t>;
   auto get_pos() const -> point_t;

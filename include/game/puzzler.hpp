@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <vector>
 
 #include "game/state.hpp"
 
@@ -13,6 +14,7 @@ class puzzler
 private:
   std::queue<game_state_t> m_game_states;
   bool should_continue = true;
+  std::vector<game_state_t> m_candidates;
 
 public:
   puzzler() = delete;

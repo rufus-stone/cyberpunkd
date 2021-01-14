@@ -1,6 +1,7 @@
 #include "game/state.hpp"
 
 #include <numeric>
+#include <optional>
 #include <spdlog/spdlog.h>
 
 #include "game/point.hpp"
@@ -157,7 +158,7 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
     }
   }
 
-  spdlog::info("After that move {} goals remain of {} ({} successfully completed)", goals.m_goals_remaining, goals.m_num_goals, goals.m_goals_completed);
+  spdlog::info("After moving to {} @ {}, {} goals remain of {} ({} successfully completed)", s, pnkd::point_t{move, this->m_grid_size}, goals.m_goals_remaining, goals.m_num_goals, goals.m_goals_completed);
   // Goal counting isn't working properly... need to figure out why
 
   if (goals.m_goals_remaining == 0 && goals.m_goals_completed == 0)
@@ -175,7 +176,7 @@ auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
 
   // List all the valid moves we could make
   std::vector<std::size_t> const valid_moves = this->list_all_valid_moves();
-  spdlog::debug("Found {} valid moves from pos {}", valid_moves.size(), this->m_pos);
+  spdlog::debug("Found {} valid moves from {} @ {}", valid_moves.size(), this->m_grid[this->m_pos.pos()], this->m_pos);
 
   // Play each move out
   for (auto const move : valid_moves)
@@ -195,9 +196,8 @@ auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
 
     // Have we already complete/failed all the goals? If so, stop
     if (new_goals.empty())
-    //if (std::find_if_not(std::begin(new_goals), std::end(new_goals), [](auto const &goal) { return goal.m_completed && !goal.m_failed; }) == std::end(new_goals))
     {
-      spdlog::info("Route taken: {}", pnkd::route_to_string(route));
+      spdlog::info("Route taken: {}", route); //pnkd::route_to_string(route));
 
       return next_states;
     }
@@ -212,6 +212,38 @@ auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
   }
 
   return next_states;
+}
+
+auto game_state_t::make_move(std::size_t const move) const -> std::optional<game_state_t>
+{
+  // Get copies of the current state variables
+  auto move_history = this->m_move_history;
+  auto route = this->m_route;
+  bool direction = this->m_direction;
+
+  // Make the move
+  move_history.set(move); // Mark this position as moved into
+  route.push_back(move);  // Add the move to the route history
+  direction = !direction; // Toggle the vertical direction flag
+
+  // Now check if it progressed any goals
+  auto new_goals = this->score_goals(move);
+
+  // Have we already complete/failed all the goals? If so, stop
+  if (new_goals.empty())
+  {
+    spdlog::info("Route taken: {}", route);
+
+    return std::nullopt;
+  }
+
+  // Create a new point_t for the new position
+  auto new_pos = point_t{move, this->m_grid_size};
+
+  // Now create a new game state based on the move we just made
+  auto new_state = pnkd::game_state_t{this->m_grid, new_goals, this->m_buffer_size, new_pos, direction, move_history, route};
+
+  return new_state;
 }
 
 

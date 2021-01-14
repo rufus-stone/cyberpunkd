@@ -15,6 +15,4 @@ auto strip(std::string const &input) -> std::string;
 
 auto split(std::string const &input, std::string const &delimiters = " ") -> std::vector<std::string>;
 
-auto route_to_string(std::vector<std::size_t> const &route) -> std::string;
-
 } // namespace pnkd

@@ -38,8 +38,10 @@ auto puzzler::solve() -> void
 
     // Get the state at the front of the queue
     auto game_state = this->m_game_states.front();
-
     spdlog::info("Evaluating state id {} (parent {})", game_state.m_id, game_state.m_parent_id);
+
+    // List all the possible valid moves from the current position
+    //auto const valid_moves = game_state.list_all_valid_moves();
 
     // Make all the valid moves and generate a new list of game states
     auto next_game_states = game_state.make_all_valid_moves();
@@ -56,7 +58,7 @@ auto puzzler::solve() -> void
         if (g.m_completed && !g.m_failed)
         {
           spdlog::info("Goal complete! {}", g.str());
-          spdlog::info("Route taken: {}", pnkd::route_to_string(state.get_route()));
+          spdlog::info("Route taken: {}", state.get_route());
         }
       }
     }

@@ -5,7 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "spdlog/fmt/ostr.h" // must be included
+#include <spdlog/fmt/ostr.h> // must be included for printing this type with spdlog
 
 namespace pnkd
 {

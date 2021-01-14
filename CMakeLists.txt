@@ -17,6 +17,7 @@ add_executable(
   src/utils/uuid.cpp
   src/ocr.cpp
   src/game/point.cpp
+  src/game/route.cpp
   src/game/goal.cpp
   src/game/state.cpp
   src/game/puzzler.cpp)
