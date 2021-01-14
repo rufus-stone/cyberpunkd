@@ -9,6 +9,8 @@
 #include "game/point.hpp"
 #include "game/goal.hpp"
 
+#include "utils/uuid.hpp"
+
 namespace pnkd
 {
 
@@ -38,6 +40,8 @@ private:
   move_history_t m_move_history;
   route_t m_route;
 
+  bool m_complete = true;
+
 public:
   game_state_t() = delete;
   game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size);
@@ -52,6 +56,9 @@ public:
   auto make_all_valid_moves() const -> std::vector<game_state_t>;
   auto get_pos() const -> point_t;
   auto get_route() const -> route_t;
+
+  std::string m_id = pnkd::uuid::generate();
+  std::string m_parent_id;
 };
 
 

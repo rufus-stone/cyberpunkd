@@ -7,7 +7,7 @@ namespace pnkd
 
 auto goal_list_t::update() -> void
 {
-  for (auto const &goal : this->m_goal_list)
+  for (auto const &goal : *this)
   {
     if (goal.m_completed)
     {
@@ -16,7 +16,7 @@ auto goal_list_t::update() -> void
     }
   }
 
-  if (this->m_goals_completed == this->size())
+  if (this->m_goals_completed == this->m_num_goals)
   {
     spdlog::info("That was the last of 'em!");
     this->m_completed = true;

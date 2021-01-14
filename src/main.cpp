@@ -135,7 +135,10 @@ int main(int argc, const char **argv)
     tmp = pnkd::strip(tmp);
     goal_list.emplace_back(pnkd::goal_t{this_goal, tmp});
   }
+  goal_list.m_num_goals = goal_list.size();
+  goal_list.m_goals_remaining = goal_list.m_num_goals;
 
+  spdlog::info("goal_list.m_num_goals == {}", goal_list.m_num_goals);
   for (auto const &goal : goal_list)
   {
     spdlog::info(goal.str());

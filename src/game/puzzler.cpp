@@ -30,20 +30,19 @@ auto puzzler::solve() -> void
 {
   auto new_states = std::queue<game_state_t>{};
 
-  int i = 0;
+  int iters = 0;
 
   while (!this->m_game_states.empty() && this->should_continue)
   {
-    spdlog::info("\n\n----------------------\nIteration {}\n----------------------\n\n", i++);
+    spdlog::info("\n----------------------\nIteration {}\n----------------------", iters++);
 
     // Get the state at the front of the queue
     auto game_state = this->m_game_states.front();
 
-    // Find all the valid next moves for this game state
-    auto const next_moves = game_state.list_all_valid_moves();
+    spdlog::info("Evaluating state id {} (parent {})", game_state.m_id, game_state.m_parent_id);
 
     // Make all the valid moves and generate a new list of game states
-    auto const next_game_states = game_state.make_all_valid_moves();
+    auto next_game_states = game_state.make_all_valid_moves();
 
     spdlog::debug("Generated {} new game states", next_game_states.size());
 
@@ -52,13 +51,11 @@ auto puzzler::solve() -> void
     {
       auto gs = state.get_goals();
 
-      //spdlog::info("{} done!", gs.m_goals_completed);
-
       for (auto const &g : gs)
       {
         if (g.m_completed && !g.m_failed)
         {
-          //spdlog::info("Goal complete! {}", g.str());
+          spdlog::info("Goal complete! {}", g.str());
           spdlog::info("Route taken: {}", pnkd::route_to_string(state.get_route()));
         }
       }
@@ -67,6 +64,7 @@ auto puzzler::solve() -> void
     // Add these new game states to the list of states for the next loop
     for (auto &state : next_game_states)
     {
+      state.m_parent_id = game_state.m_id;
       this->m_game_states.push(state);
     }
 

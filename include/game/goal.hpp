@@ -12,9 +12,10 @@ struct goal_t;
 
 struct goal_list_t : public std::vector<goal_t>
 {
-  std::vector<goal_t> m_goal_list;
+  std::size_t m_num_goals = this->size();
   bool m_completed = false;
   std::size_t m_goals_completed = 0;
+  std::size_t m_goals_remaining = m_num_goals;
 
   auto update() -> void;
 };

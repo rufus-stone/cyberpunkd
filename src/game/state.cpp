@@ -13,7 +13,6 @@ namespace pnkd
 game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}), m_direction(false), m_move_history(move_history_t{}), m_route(route_t{})
 {
   std::size_t const grid_size = grid.size();
-  std::size_t const num_goals = goals.size();
 
   // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
   if (grid_size != 25 && grid_size != 36)
@@ -24,13 +23,13 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
   std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
   this->m_grid_width = grid_width;
 
-  spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
+  //std::size_t const num_goals = goals.size();
+  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
 }
 
 game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size, point_t const &pos, bool const direction, move_history_t const &move_history, route_t const &route) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(pos), m_direction(direction), m_move_history(move_history), m_route(route)
 {
   std::size_t const grid_size = grid.size();
-  std::size_t const num_goals = goals.size();
 
   // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
   if (grid_size != 25 && grid_size != 36)
@@ -41,7 +40,8 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
   std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
   this->m_grid_width = grid_width;
 
-  spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
+  //std::size_t const num_goals = goals.size();
+  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
 }
 
 
@@ -72,7 +72,7 @@ auto game_state_t::list_all_valid_moves() const -> std::vector<std::size_t>
 
   if (moves_taken > this->m_buffer_size)
   {
-    //spdlog::info("Can't take any more moves!");
+    spdlog::error("Can't take any more moves!");
     return std::vector<std::size_t>{};
   }
 
@@ -121,7 +121,7 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
     {
       if (s == goals[i].front())
       {
-        spdlog::debug("{} is the next sequence in the goal '{}'!", s, goals[i].str());
+        spdlog::debug("{} at {} is the next sequence in the goal '{}'!", s, point_t{move, this->m_grid_size}, goals[i].str());
         goals[i].pop();
 
         // Was that the last sequence? If so, mark it as complete
@@ -130,6 +130,7 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
         {
           spdlog::info("{} was the last sequence in the goal '{}', so it's now complete! Nice!", s, goals[i].str());
           goals[i].m_completed = true;
+          goals.m_goals_completed++;
         }
 
         goals[i].m_progress.set(i);
@@ -147,12 +148,25 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
           {
             goals[i].pop();
           }
+
+          goals.m_goals_remaining--;
+
+          spdlog::error("goals.m_goals_remaining == {}", goals.m_goals_remaining);
         }
       }
     }
   }
 
-  return goals;
+  spdlog::info("After that move {} goals remain of {} ({} successfully completed)", goals.m_goals_remaining, goals.m_num_goals, goals.m_goals_completed);
+  // Goal counting isn't working properly... need to figure out why
+
+  if (goals.m_goals_remaining == 0 && goals.m_goals_completed == 0)
+  {
+    return pnkd::goal_list_t{};
+  } else
+  {
+    return goals;
+  }
 }
 
 auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
@@ -161,7 +175,7 @@ auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
 
   // List all the valid moves we could make
   std::vector<std::size_t> const valid_moves = this->list_all_valid_moves();
-  spdlog::debug("Found {} valid moves", valid_moves.size());
+  spdlog::debug("Found {} valid moves from pos {}", valid_moves.size(), this->m_pos);
 
   // Play each move out
   for (auto const move : valid_moves)
@@ -180,9 +194,9 @@ auto game_state_t::make_all_valid_moves() const -> std::vector<game_state_t>
     auto new_goals = this->score_goals(move);
 
     // Have we already complete/failed all the goals? If so, stop
-    if (std::find_if_not(std::begin(new_goals), std::end(new_goals), [](auto const &goal) { return goal.m_completed && !goal.m_failed; }) == std::end(new_goals))
+    if (new_goals.empty())
+    //if (std::find_if_not(std::begin(new_goals), std::end(new_goals), [](auto const &goal) { return goal.m_completed && !goal.m_failed; }) == std::end(new_goals))
     {
-      spdlog::info("All goals complete!");
       spdlog::info("Route taken: {}", pnkd::route_to_string(route));
 
       return next_states;

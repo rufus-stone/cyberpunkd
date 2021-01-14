@@ -14,6 +14,7 @@ add_executable(
   src/main.cpp
   src/utils/file_utils.cpp
   src/utils/string_utils.cpp
+  src/utils/uuid.cpp
   src/ocr.cpp
   src/game/point.cpp
   src/game/goal.cpp
