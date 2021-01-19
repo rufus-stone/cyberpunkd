@@ -57,9 +57,7 @@ jobs:
 
     - name: Run Tests on Windows
       if: ${{matrix.config.os == 'windows-latest'}}
-      working-directory: ${{runner.workspace}}
+      working-directory: ${{runner.workspace}}\\build\\bin
       run: |
-        dir
-        dir build
-        dir cyberpunkd
-        ${{runner.workspace}}\\build\\bin\\cyberpunkd_tests.exe
+        dir \\S
+        cyberpunkd_tests.exe
