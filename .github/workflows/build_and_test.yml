@@ -60,4 +60,4 @@ jobs:
       working-directory: ${{runner.workspace}}\\build\\bin
       run: |
         dir ${{runner.workspace}}\\build\\bin
-        cyberpunkd_tests.exe
+        ./cyberpunkd_tests.exe
