@@ -46,4 +46,40 @@ auto split(std::string const &input, std::string const &delimiters) -> std::vect
   return segments;
 }
 
+
+auto grid_to_string(std::vector<std::string> const &input) -> std::string
+{
+  // What is the grid width?
+  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(input.size()));
+
+  // We expect grids that are perfect squares
+  if (grid_width * grid_width != input.size())
+  {
+    spdlog::error("[❗] Invalid grid size: {}", input.size());
+    return std::string{};
+  } else
+  {
+    std::stringstream ss;
+
+    for (std::size_t i = 0; i < input.size(); ++i)
+    {
+      ss << input[i] << ((i + 1) % grid_width == 0 ? "\n" : " ");
+    }
+
+    return strip(ss.str());
+  }
+}
+
+
+auto goal_list_to_string(goal_list_t const &input) -> std::string
+{
+  std::stringstream ss;
+  for (auto const &goal : input)
+  {
+    ss << goal.str() << '\n';
+  }
+
+  return strip(ss.str());
+}
+
 } // namespace pnkd

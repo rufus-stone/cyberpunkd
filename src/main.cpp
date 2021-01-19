@@ -76,73 +76,51 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
-  //for (auto const &img : pnkd::get_all_screenshots(path))
-  //{
-  // Perform OCR
-  // --------------------------
-  // Get the text from the grid
-  // --------------------------
-  auto const grid_text = pnkd::get_string_from_grid(img, tessdata_dir); //pnkd::get_string_from_image(img, tessdata_dir);
-  spdlog::info("grid_text:\n\n{}\n", grid_text);
+  // OCR the grid
+  auto const grid = pnkd::get_grid_from_img(img, tessdata_dir);
 
-  // Did the OCR generate any text?
-  if (grid_text.empty())
+  // Did the OCR fail?
+  if (grid.empty())
   {
     spdlog::error("[❗] Failed to extract any text from grid!");
     return EXIT_FAILURE;
   }
 
-  // Parse grid OCR text
-  auto const grid = pnkd::split(grid_text, "\n ");
+  spdlog::info("grid_text:\n\n{}\n", pnkd::grid_to_string(grid));
 
-  // ---------------------------
-  // Get the text from the goals
-  // ---------------------------
-  auto const goal_text = pnkd::get_string_from_goals(img, tessdata_dir);
-  spdlog::info("goal_text:\n\n{}\n", goal_text);
+  // OCR the goals
+  auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
+  goal_list.init();
 
-  // Did the OCR generate any text?
-  if (goal_text.empty())
+  // Did the OCR fail?
+  if (goal_list.empty())
   {
     spdlog::error("[❗] Failed to extract any text from goals!");
     return EXIT_FAILURE;
   }
 
-  // Parse goals OCR text
-  auto goal_list = pnkd::goal_list_t{}; //std::vector<pnkd::goal_t>{};
-  auto const goals_lines = pnkd::split(goal_text, "\n");
-  for (auto const &goal : goals_lines)
-  {
-    auto const segments = pnkd::split(goal, " ");
+  spdlog::info("goal_text:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
 
-    auto this_goal = std::queue<std::string>{};
 
-    auto tmp = std::string{};
-    for (auto const &segment : segments)
-    {
-      // The OCR sometimes confuses 1C for 1D, so fix this if needed
-      if (segment == "1D")
-      {
-        this_goal.push("1C");
-        tmp += "1C ";
-      } else
-      {
-        this_goal.push(segment);
-        tmp = tmp + segment + " ";
-      }
-    }
-
-    tmp = pnkd::strip(tmp);
-    goal_list.emplace_back(pnkd::goal_t{this_goal, tmp});
-  }
-  goal_list.m_num_goals = goal_list.size();
-  goal_list.m_goals_remaining = goal_list.m_num_goals;
-
-  spdlog::info("goal_list.m_num_goals == {}", goal_list.m_num_goals);
+  spdlog::info("Total goals: {}", goal_list.total());
   for (auto const &goal : goal_list)
   {
-    spdlog::info(goal.str());
+    spdlog::info("{}: {}", goal.m_num, goal.str());
   }
+
+  // Fake test grid and goals
+  /*
+  auto const test_grid = std::vector<std::string>{"1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A"};
+  auto test_goal = std::queue<std::string>{};
+  test_goal.push("1C");
+  test_goal.push("1C");
+  test_goal.push("55");
+  auto test_goals = pnkd::goal_list_t{};
+  test_goals.emplace_back(pnkd::goal_t{test_goal, "1C 1C 55", 0});
+  test_goals.init();
+
+  auto const initial_state = pnkd::game_state_t{test_grid, test_goals, buffer_size};
+  */
 
   // Create our initial game state
   auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};

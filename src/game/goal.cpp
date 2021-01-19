@@ -5,22 +5,37 @@
 namespace pnkd
 {
 
-auto goal_list_t::update() -> void
-{
-  for (auto const &goal : *this)
-  {
-    if (goal.m_completed)
-    {
-      ++this->m_goals_completed;
-      spdlog::info("Completed {} goals so far...", this->m_goals_completed);
-    }
-  }
 
-  if (this->m_goals_completed == this->m_num_goals)
-  {
-    spdlog::info("That was the last of 'em!");
-    this->m_completed = true;
-  }
+auto goal_list_t::total() const -> std::size_t
+{
+  return this->m_num_goals;
+}
+
+auto goal_list_t::completed() const -> std::size_t
+{
+  return this->m_goals_completed;
+}
+
+auto goal_list_t::remaining() const -> std::size_t
+{
+  return this->m_goals_remaining;
+}
+
+auto goal_list_t::complete_one() -> void
+{
+  this->m_goals_completed++;
+  this->m_goals_remaining--;
+}
+
+auto goal_list_t::fail_one() -> void
+{
+  this->m_goals_remaining--;
+}
+
+auto goal_list_t::init() -> void
+{
+  this->m_num_goals = this->size();
+  this->m_goals_remaining = this->m_num_goals;
 }
 
 

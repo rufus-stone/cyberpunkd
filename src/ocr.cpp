@@ -129,12 +129,89 @@ auto get_string_from_grid(cv::Mat const &raw_img, std::string const &tessdata_pa
   return get_string_from_image(img, tessdata_path);
 }
 
+auto fix_ocr(std::vector<std::string> const &input) -> std::vector<std::string>
+{
+  auto output = input;
+
+  // Fix any mistakes
+  for (auto &segment : output)
+  {
+    // The OCR sometimes confuses 1C for 1D, and BD for BC, so fix this if needed
+    if (segment == "1D")
+    {
+      segment = "1C";
+    } else if (segment == "BC")
+    {
+      segment = "BD";
+    }
+  }
+
+  return output;
+}
+
+auto get_grid_from_img(cv::Mat const &raw_img, std::string const &tessdata_path) -> std::vector<std::string>
+{
+  cv::Mat img = pnkd::preprocess_image(raw_img, 0.19, 0.16, 0.35, 0.315);
+
+  auto const grid_text = get_string_from_image(img, tessdata_path);
+
+  // Did the OCR generate any text?
+  if (grid_text.empty())
+  {
+    spdlog::error("[❗] Failed to extract any text from grid!");
+    return std::vector<std::string>{};
+  }
+
+  auto grid = pnkd::split(grid_text, "\n ");
+
+  return fix_ocr(grid);
+}
 
 auto get_string_from_goals(cv::Mat const &raw_img, std::string const &tessdata_path) -> std::string
 {
   cv::Mat img = pnkd::preprocess_image(raw_img, 0.11, 0.437, 0.2, 0.3, 80);
 
   return get_string_from_image(img, tessdata_path);
+}
+
+auto get_goal_list_from_img(cv::Mat const &raw_img, std::string const &tessdata_path) -> pnkd::goal_list_t
+{
+  cv::Mat img = pnkd::preprocess_image(raw_img, 0.11, 0.437, 0.2, 0.3, 80);
+
+  auto const goal_text = get_string_from_image(img, tessdata_path);
+
+  // Did the OCR generate any text?
+  if (goal_text.empty())
+  {
+    spdlog::error("[❗] Failed to extract any text from goals!");
+    return pnkd::goal_list_t{};
+  }
+
+  // Parse goals OCR text
+  auto goal_list = pnkd::goal_list_t{};
+  auto const goals_lines = pnkd::split(goal_text, "\n");
+  std::size_t goal_num = 0;
+  for (auto const &goal : goals_lines)
+  {
+    spdlog::info(goal);
+    auto const segments = fix_ocr(pnkd::split(goal, " "));
+
+    auto this_goal = std::queue<std::string>{};
+
+    auto tmp = std::string{};
+    for (auto const &segment : segments)
+    {
+      tmp = tmp + segment + " ";
+      this_goal.push(segment);
+    }
+
+    tmp = pnkd::strip(tmp);
+    goal_list.emplace_back(pnkd::goal_t{this_goal, tmp, goal_num++});
+  }
+
+  goal_list.init(); // This sets the total number of goals and the number of goals remaining from the size of the internal vector
+
+  return goal_list;
 }
 
 auto get_buffer_size(cv::Mat const &raw_img) -> std::optional<std::size_t>

@@ -34,46 +34,62 @@ auto puzzler::solve() -> void
 
   while (!this->m_game_states.empty() && this->should_continue)
   {
-    spdlog::info("\n----------------------\nIteration {}\n----------------------", iters++);
+    spdlog::debug("\n----------------------\nIteration {}\n----------------------", iters++);
 
     // Get the state at the front of the queue
     auto game_state = this->m_game_states.front();
-    spdlog::info("Evaluating state id {} (parent {})", game_state.m_id, game_state.m_parent_id);
+    spdlog::debug("Evaluating state id {} (parent {})", game_state.id(), game_state.parent_id());
 
-    // List all the possible valid moves from the current position
-    //auto const valid_moves = game_state.list_all_valid_moves();
-
-    // Make all the valid moves and generate a new list of game states
-    auto next_game_states = game_state.make_all_valid_moves();
-
-    spdlog::debug("Generated {} new game states", next_game_states.size());
-
-    // Check if any of these game states failed/completed all the goals
-    for (auto &state : next_game_states)
+    // Have we taken all our moves in this state?
+    if (game_state.moves_taken() >= game_state.buffer_size())
     {
-      auto gs = state.get_goals();
-
-      for (auto const &g : gs)
+      // Add it to the list of candidates if we've scored any goals
+      if (game_state.goals().completed() > 0)
       {
-        if (g.m_completed && !g.m_failed)
+        this->m_candidates.push_back(game_state);
+      }
+
+    } else
+    {
+      // List all the valid moves we could make
+      std::vector<std::size_t> const valid_moves = game_state.list_all_valid_moves();
+      spdlog::debug("Found {} valid moves from {} @ {}", valid_moves.size(), game_state.grid()[game_state.pos().pos()], game_state.pos());
+
+      // Play each move out
+      for (std::size_t const move : valid_moves)
+      {
+        spdlog::debug("++++++++++++++++++++++");
+        // Make the move and score the goals
+        auto next_game_state = game_state.make_move(move);
+
+        if (next_game_state)
         {
-          spdlog::info("Goal complete! {}", g.str());
-          spdlog::info("Route taken: {}", state.get_route());
+          next_game_state->set_parent_id(game_state.id());
+          this->m_game_states.push(next_game_state.value());
+
+          // Was the move worth adding to the list of candidates?
+          if (next_game_state->goals().remaining() == 0 && next_game_state->goals().completed() > 0)
+          {
+            spdlog::debug("Candidate: {} of {} goals in {} moves", next_game_state->goals().completed(), next_game_state->goals().total(), next_game_state->moves_taken());
+
+            this->m_candidates.push_back(next_game_state.value());
+          }
         }
       }
     }
 
-    // Add these new game states to the list of states for the next loop
-    for (auto &state : next_game_states)
-    {
-      state.m_parent_id = game_state.m_id;
-      this->m_game_states.push(state);
-    }
-
-    // Now check how well it did
-
     // Pop this state now that we've dealt with it
     this->m_game_states.pop();
+  }
+
+  spdlog::info("Generated {} candidate routes", this->m_candidates.size());
+  for (auto const &candidate : this->m_candidates)
+  {
+    // Score each candidate - the fewer moves the better
+    // TODO: figure out a good way to score these
+    double score = static_cast<double>(candidate.goals().completed()) / static_cast<double>(candidate.moves_taken());
+
+    spdlog::info("{} - ({:.3f}) {} of {} in {} moves: {}", candidate.id(), score, candidate.goals().completed(), candidate.goals().total(), candidate.moves_taken(), candidate.route());
   }
 }
 
