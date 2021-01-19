@@ -193,7 +193,6 @@ auto get_goal_list_from_img(cv::Mat const &raw_img, std::string const &tessdata_
   std::size_t goal_num = 0;
   for (auto const &goal : goals_lines)
   {
-    spdlog::info(goal);
     auto const segments = fix_ocr(pnkd::split(goal, " "));
 
     auto this_goal = std::queue<std::string>{};

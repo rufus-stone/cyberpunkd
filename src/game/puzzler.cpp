@@ -5,11 +5,11 @@
 #include <numeric>
 #include <sstream>
 #include <utility>
+#include <map>
 
 #include <spdlog/spdlog.h>
 
 #include "game/goal.hpp"
-#include "utils/prng.hpp"
 #include "utils/string_utils.hpp"
 #include "game/point.hpp"
 #include "game/state.hpp"
@@ -23,6 +23,7 @@ puzzler::puzzler(game_state_t const &game_state)
   auto q = std::queue<game_state_t>{};
   q.push(game_state);
   this->m_game_states = q;
+  this->m_total_goals = game_state.goals().total();
 }
 
 
@@ -59,6 +60,7 @@ auto puzzler::solve() -> void
       for (std::size_t const move : valid_moves)
       {
         spdlog::debug("++++++++++++++++++++++");
+
         // Make the move and score the goals
         auto next_game_state = game_state.make_move(move);
 
@@ -82,14 +84,79 @@ auto puzzler::solve() -> void
     this->m_game_states.pop();
   }
 
+  auto top_picks = std::map<std::size_t, game_state_t>{};
+
   spdlog::info("Generated {} candidate routes", this->m_candidates.size());
   for (auto const &candidate : this->m_candidates)
   {
-    // Score each candidate - the fewer moves the better
-    // TODO: figure out a good way to score these
-    double score = static_cast<double>(candidate.goals().completed()) / static_cast<double>(candidate.moves_taken());
+    auto gb = std::bitset<goal_t::max_goals>{};
 
-    spdlog::info("{} - ({:.3f}) {} of {} in {} moves: {}", candidate.id(), score, candidate.goals().completed(), candidate.goals().total(), candidate.moves_taken(), candidate.route());
+    // Score each candidate - longer goal sequences and fewer moves are better
+    auto const goals = candidate.goals();
+
+    for (std::size_t i = 0; i < goals.total(); ++i)
+    {
+      if (goals[i].m_completed)
+      {
+        gb.set(i);
+      }
+    }
+
+    //spdlog::debug("{} - {} of {} goals in {} moves: {}", candidate.id(), candidate.goals().completed(), candidate.goals().total(), candidate.moves_taken(), candidate.route());
+
+    std::size_t idx = static_cast<std::size_t>(gb.to_ulong());
+
+    // Is this the first example of this combo of completed goals?
+    if (top_picks.find(idx) == std::end(top_picks))
+    {
+      top_picks[idx] = candidate;
+    } else
+    {
+      // If not, check if this candidate is better than the previous best
+      auto const current_best = top_picks.at(idx);
+
+      if (candidate.moves_taken() < current_best.moves_taken())
+      {
+        top_picks[idx] = candidate;
+      }
+    }
+  }
+
+  spdlog::info("Refined {} candidates to {} best routes:", this->m_candidates.size(), top_picks.size());
+
+  for (auto const &[combo, pick] : top_picks)
+  {
+    auto const goals = pick.goals();
+
+    auto goal_vec = std::vector<std::string>{};
+
+    for (auto const &goal : goals)
+    {
+      if (goal.m_completed)
+      {
+        std::stringstream ss;
+        ss << goal.m_num << ": " << goal.str();
+        goal_vec.push_back(ss.str());
+      }
+    }
+
+    std::stringstream ss;
+    if (goal_vec.size() == 1)
+    {
+      ss << "[" << goal_vec[0] << "]";
+    } else
+    {
+      ss << "[" << goal_vec[0];
+      for (std::size_t i = 1; i < goal_vec.size(); ++i)
+      {
+        ss << ", " << goal_vec[i];
+      }
+
+      ss << "]";
+    }
+
+
+    spdlog::info("{} - {} of {} goals ({}) in {} moves: {}", pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), pick.moves_taken(), pick.route());
   }
 }
 
