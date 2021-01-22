@@ -27,7 +27,7 @@ puzzler::puzzler(game_state_t const &game_state)
 }
 
 
-auto puzzler::solve() -> void
+auto puzzler::solve() -> std::map<std::size_t, game_state_t>
 {
   auto new_states = std::queue<game_state_t>{};
 
@@ -82,9 +82,11 @@ auto puzzler::solve() -> void
 
     // Pop this state now that we've dealt with it
     this->m_game_states.pop();
+
+    // TODO: Check if it's now impossible to improve on the current solutions, and toggle this->should_continue to cancel further loops
   }
 
-  auto top_picks = std::map<std::size_t, game_state_t>{};
+  auto optimal_solutions = std::map<std::size_t, game_state_t>{};
 
   spdlog::info("Generated {} candidate routes", this->m_candidates.size());
   for (auto const &candidate : this->m_candidates)
@@ -107,13 +109,13 @@ auto puzzler::solve() -> void
     std::size_t goal_combo = static_cast<std::size_t>(gb.to_ulong());
 
     // Is this the first example of this combo of completed goals?
-    if (top_picks.find(goal_combo) == std::end(top_picks))
+    if (optimal_solutions.find(goal_combo) == std::end(optimal_solutions))
     {
-      top_picks[goal_combo] = candidate;
+      optimal_solutions[goal_combo] = candidate;
     } else
     {
       // If not, check if this candidate is better than the previous best
-      auto const current_best = top_picks.at(goal_combo);
+      auto const current_best = optimal_solutions.at(goal_combo);
       std::size_t curr_best_scoring_moves = std::max_element(std::begin(current_best.goals()), std::end(current_best.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
       std::size_t candidate_scoring_moves = std::max_element(std::begin(candidate.goals()), std::end(candidate.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
 
@@ -122,48 +124,50 @@ auto puzzler::solve() -> void
       //if (candidate.moves_taken() < current_best.moves_taken())
       if (candidate_scoring_moves < curr_best_scoring_moves)
       {
-        top_picks[goal_combo] = candidate;
+        optimal_solutions[goal_combo] = candidate;
       }
     }
   }
 
-  spdlog::info("Refined {} candidates to {} best routes:", this->m_candidates.size(), top_picks.size());
+  spdlog::info("Refined {} candidates down to {} optimal solutions:", this->m_candidates.size(), optimal_solutions.size());
 
-  for (auto const &[combo, pick] : top_picks)
+  if (spdlog::get_level() != spdlog::level::off)
   {
-    auto const goals = pick.goals();
-
-    auto goal_vec = std::vector<std::string>{};
-
-    for (auto const &goal : goals)
+    for (auto const &[combo, pick] : optimal_solutions)
     {
-      if (goal.m_completed)
+      auto goal_vec = std::vector<std::string>{};
+
+      for (auto const &goal : pick.goals())
       {
-        std::stringstream ss;
-        ss << goal.m_num << ": " << goal.str();
-        goal_vec.push_back(ss.str());
-      }
-    }
-
-    std::stringstream ss;
-    if (goal_vec.size() == 1)
-    {
-      ss << "[" << goal_vec[0] << "]";
-    } else
-    {
-      ss << "[" << goal_vec[0];
-      for (std::size_t i = 1; i < goal_vec.size(); ++i)
-      {
-        ss << ", " << goal_vec[i];
+        if (goal.m_completed)
+        {
+          std::stringstream ss;
+          ss << goal.m_num << ": " << goal.str();
+          goal_vec.push_back(ss.str());
+        }
       }
 
-      ss << "]";
+      std::stringstream ss;
+      if (goal_vec.size() == 1)
+      {
+        ss << "[" << goal_vec[0] << "]";
+      } else
+      {
+        ss << "[" << goal_vec[0];
+        for (std::size_t i = 1; i < goal_vec.size(); ++i)
+        {
+          ss << ", " << goal_vec[i];
+        }
+
+        ss << "]";
+      }
+
+      std::size_t scoring_moves = std::max_element(std::begin(pick.goals()), std::end(pick.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
+      spdlog::info("{}: {} - {} of {} goals ({}) in {} moves: {}", combo, pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
     }
-
-
-    std::size_t scoring_moves = std::max_element(std::begin(pick.goals()), std::end(pick.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
-    spdlog::info("{} - {} of {} goals ({}) in {} moves: {}", pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
   }
+
+  return optimal_solutions;
 }
 
 } // namespace pnkd

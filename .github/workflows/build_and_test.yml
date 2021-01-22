@@ -51,9 +51,9 @@ jobs:
 
     - name: Run Tests on Linux
       if: ${{matrix.config.os == 'ubuntu-latest'}}
-      working-directory: ${{runner.workspace}}
+      working-directory: ${{runner.workspace}}/build/bin/
       shell: bash
-      run: ${{runner.workspace}}/build/bin/cyberpunkd_tests
+      run: ./cyberpunkd_tests
 
     - name: Run Tests on Windows
       if: ${{matrix.config.os == 'windows-latest'}}

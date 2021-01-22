@@ -101,35 +101,20 @@ int main(int argc, const char **argv)
 
   spdlog::info("goal_text:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
 
-
   spdlog::info("Total goals: {}", goal_list.total());
   for (auto const &goal : goal_list)
   {
-    spdlog::info("{}: {}", goal.m_num, goal.str());
+    spdlog::info("{}", goal.str());
   }
-
-  // Fake test grid and goals
-  /*
-  auto const test_grid = std::vector<std::string>{"1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A"};
-  auto test_goal = std::queue<std::string>{};
-  test_goal.push("1C");
-  test_goal.push("1C");
-  test_goal.push("55");
-  auto test_goals = pnkd::goal_list_t{};
-  test_goals.emplace_back(pnkd::goal_t{test_goal, "1C 1C 55", 0});
-  test_goals.init();
-
-  auto const initial_state = pnkd::game_state_t{test_grid, test_goals, buffer_size};
-  */
 
   // Create our initial game state
   auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
 
   // Create a puzzler and solve
   auto puzzler = pnkd::puzzler{initial_state};
-  puzzler.solve();
+  auto const solutions = puzzler.solve();
 
-  // TODO: Show optimal solution
+  // TODO: Inform user of optimal solutions
 
   return EXIT_SUCCESS;
 }

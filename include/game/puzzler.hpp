@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <vector>
+#include <map>
 
 #include "game/state.hpp"
 
@@ -23,7 +24,7 @@ public:
   ~puzzler() = default;
 
   auto play_one() -> std::queue<game_state_t>;
-  auto solve() -> void;
+  auto solve() -> std::map<std::size_t, game_state_t>;
 };
 
 } // namespace pnkd
