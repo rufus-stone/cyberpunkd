@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.18)
+cmake_minimum_required(VERSION 3.15...3.19)
 
 # Set up our project
 project(
@@ -9,8 +9,18 @@ project(
   LANGUAGES CXX)
 
 # Create our executable
-add_executable(${PROJECT_NAME} src/main.cpp src/file_utils.cpp src/ocr.cpp
-                               src/puzzler.cpp src/string_utils.cpp)
+add_executable(
+  ${PROJECT_NAME}
+  src/main.cpp
+  src/utils/file_utils.cpp
+  src/utils/string_utils.cpp
+  src/utils/uuid.cpp
+  src/ocr.cpp
+  src/game/point.cpp
+  src/game/route.cpp
+  src/game/goal.cpp
+  src/game/state.cpp
+  src/game/puzzler.cpp)
 
 # We're using C++17
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)

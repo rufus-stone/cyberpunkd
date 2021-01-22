@@ -8,7 +8,8 @@
 
 #include "catch.hpp"
 
-#include "file_utils.hpp"
+#include "utils/file_utils.hpp"
+#include "utils/string_utils.hpp"
 #include "ocr.hpp"
 
 #include "sample_image.hpp"
@@ -30,7 +31,7 @@ SCENARIO("Tesseract trained data files", "[ocr][tessdata]")
   }
 }
 
-
+// This isn't working on the Windows test environment - something wrong with finding tessdata folder
 ////////////////////////////////////////////////////////////////
 SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 {
@@ -42,12 +43,24 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 
     WHEN(" the grid is fed to Tesseract")
     {
-      auto const img_text = pnkd::get_string_from_image(img);
+      auto const grid = pnkd::get_grid_from_img(img);
 
-      THEN(" the correct text is identified")
+      THEN(" the correct grid data is identified")
       {
-        spdlog::info("OCR:\n\n{}\n", img_text);
-        REQUIRE(img_text == "1C 55 1C 1C 1C\n1C 1C 55 BD 1C\n55 55 BD E9 1C\nBC 1C 1C 1C 55\nE9 1C 55 E9 1C");
+        spdlog::info("OCR:\n\n{}\n", pnkd::grid_to_string(grid));
+        REQUIRE(grid == std::vector<std::string>{"1C", "55", "1C", "1C", "1C", "1C", "1C", "55", "BD", "1C", "55", "55", "BD", "E9", "1C", "BD", "1C", "1C", "1C", "55", "E9", "1C", "55", "E9", "1C"});
+      }
+    }
+
+    WHEN(" the goals are fed to Tesseract")
+    {
+      auto const goal_list = pnkd::get_goal_list_from_img(img);
+
+      THEN(" the correct goals are identified")
+      {
+        spdlog::info("OCR:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
+        REQUIRE(goal_list[0].str() == "55 1C");
+        REQUIRE(goal_list[1].str() == "1C 1C 1C");
       }
     }
   }

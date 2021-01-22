@@ -6,10 +6,12 @@
 #include <opencv2/opencv.hpp>
 
 #include "usage.hpp"
-#include "file_utils.hpp"
-#include "string_utils.hpp"
+#include "utils/file_utils.hpp"
+#include "utils/string_utils.hpp"
 #include "ocr.hpp"
-#include "puzzler.hpp"
+#include "game/puzzler.hpp"
+#include "game/state.hpp"
+#include "game/goal.hpp"
 
 int main(int argc, const char **argv)
 {
@@ -74,61 +76,60 @@ int main(int argc, const char **argv)
     return EXIT_FAILURE;
   }
 
-  //for (auto const &img : pnkd::get_all_screenshots(path))
-  //{
-  // Perform OCR
-  // --------------------------
-  // Get the text from the grid
-  // --------------------------
-  auto const grid_text = pnkd::get_string_from_grid(img, tessdata_dir); //pnkd::get_string_from_image(img, tessdata_dir);
-  spdlog::info("grid_text:\n\n{}\n", grid_text);
+  // OCR the grid
+  auto const grid = pnkd::get_grid_from_img(img, tessdata_dir);
 
-  // Did the OCR generate any text?
-  if (grid_text.empty())
+  // Did the OCR fail?
+  if (grid.empty())
   {
     spdlog::error("[❗] Failed to extract any text from grid!");
     return EXIT_FAILURE;
   }
 
-  // Parse OCR'd text
-  auto const grid = pnkd::split(grid_text, "\n ");
+  spdlog::info("grid_text:\n\n{}\n", pnkd::grid_to_string(grid));
 
-  // ---------------------------
-  // Get the text from the goals
-  // ---------------------------
-  auto const goal_text = pnkd::get_string_from_goals(img, tessdata_dir);
-  spdlog::info("goal_text:\n\n{}\n", goal_text);
+  // OCR the goals
+  auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
+  goal_list.init();
 
-  // Did the OCR generate any text?
-  if (goal_text.empty())
+  // Did the OCR fail?
+  if (goal_list.empty())
   {
     spdlog::error("[❗] Failed to extract any text from goals!");
     return EXIT_FAILURE;
   }
 
-  // Parse OCR'd text
-  auto goals = std::vector<std::queue<std::string>>{};
-  auto const goals_lines = pnkd::split(goal_text, "\n");
-  for (auto const &goal : goals_lines)
+  spdlog::info("goal_text:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
+
+
+  spdlog::info("Total goals: {}", goal_list.total());
+  for (auto const &goal : goal_list)
   {
-    auto const segments = pnkd::split(goal, " ");
-
-    auto this_goal = std::queue<std::string>{};
-    for (auto const &segment : segments)
-    {
-      this_goal.push(segment);
-    }
-
-    goals.push_back(this_goal);
+    spdlog::info("{}: {}", goal.m_num, goal.str());
   }
 
+  // Fake test grid and goals
+  /*
+  auto const test_grid = std::vector<std::string>{"1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A", "1C", "55", "BD", "E9", "7A"};
+  auto test_goal = std::queue<std::string>{};
+  test_goal.push("1C");
+  test_goal.push("1C");
+  test_goal.push("55");
+  auto test_goals = pnkd::goal_list_t{};
+  test_goals.emplace_back(pnkd::goal_t{test_goal, "1C 1C 55", 0});
+  test_goals.init();
 
-  // Solve paths
-  auto const puzzler = pnkd::puzzler{grid, goals, buffer_size};
-  auto const solutions = puzzler.solve();
+  auto const initial_state = pnkd::game_state_t{test_grid, test_goals, buffer_size};
+  */
 
-  // TODO: Message user with solution (Discord bot?)
-  //}
+  // Create our initial game state
+  auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
+
+  // Create a puzzler and solve
+  auto puzzler = pnkd::puzzler{initial_state};
+  puzzler.solve();
+
+  // TODO: Show optimal solution
 
   return EXIT_SUCCESS;
 }
