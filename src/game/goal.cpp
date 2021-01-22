@@ -74,4 +74,15 @@ auto goal_t::str() const -> std::string
   return this->m_str;
 }
 
+auto goal_t::moves_taken() const -> std::size_t
+{
+  return this->m_moves_taken;
+}
+
+auto goal_t::completed_in(std::size_t const moves_taken) -> void
+{
+  this->m_completed = true;
+  this->m_moves_taken = moves_taken;
+}
+
 } // namespace pnkd

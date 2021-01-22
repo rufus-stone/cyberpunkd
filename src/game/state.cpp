@@ -68,7 +68,7 @@ auto game_state_t::is_valid_move(std::size_t const pos) const -> bool
 auto game_state_t::list_all_valid_moves() const -> std::vector<std::size_t>
 {
   // How many moves have we made already?
-  auto const moves_taken = this->m_move_history.count();
+  auto const moves_taken = this->moves_taken(); //this->m_move_history.count();
 
   // Have we already made all our moves?
   if (moves_taken >= this->m_buffer_size)
@@ -124,14 +124,12 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
         goal_list[i].pop();
 
         // Was that the last sequence? If so, mark it as complete
-        // TODO: Score later sequences higher
         if (goal_list[i].empty())
         {
           spdlog::debug("{} was the last sequence in the goal '{}', so it's now complete! Nice!", s, goal_list[i].str());
-          goal_list[i].m_completed = true;
+          //goal_list[i].m_completed = true;
+          goal_list[i].completed_in(this->moves_taken() + 1); // +1 because at this point the current move is still being evaluated, so the number returned by this->moves_taken() is 1 behind
           goal_list.complete_one();
-          //goal_list.m_goals_completed++;
-          //goal_list.m_goals_remaining--;
         }
 
         goal_list[i].m_progress.set(i);
@@ -150,7 +148,6 @@ auto game_state_t::score_goals(std::size_t const move) const -> goal_list_t
             goal_list[i].pop();
           }
 
-          //goal_list.m_goals_remaining--;
           goal_list.fail_one();
 
           spdlog::debug("{} goals remaining", goal_list.remaining());
@@ -217,6 +214,11 @@ auto game_state_t::moves_taken() const -> std::size_t
 {
   return this->m_move_history.count();
 }
+
+/*auto game_state_t::scoring_moves_taken() const -> std::size_t
+{
+  return this->m_scoring_moves_taken;
+}*/
 
 auto game_state_t::buffer_size() const -> std::size_t
 {

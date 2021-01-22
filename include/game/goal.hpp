@@ -24,6 +24,8 @@ struct goal_t
   bool m_completed = false;
   bool m_failed = false;
 
+  std::size_t m_moves_taken = 0;
+
   auto empty() const -> bool;
   auto front() const -> std::string const &;
   auto front() -> std::string &;
@@ -31,6 +33,8 @@ struct goal_t
   auto size() const -> std::size_t;
   auto seq_len() const -> std::size_t;
   auto str() const -> std::string;
+  auto moves_taken() const -> std::size_t;
+  auto completed_in(std::size_t const moves_taken) -> void;
 };
 
 

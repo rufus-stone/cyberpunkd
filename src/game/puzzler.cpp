@@ -104,20 +104,25 @@ auto puzzler::solve() -> void
 
     //spdlog::debug("{} - {} of {} goals in {} moves: {}", candidate.id(), candidate.goals().completed(), candidate.goals().total(), candidate.moves_taken(), candidate.route());
 
-    std::size_t idx = static_cast<std::size_t>(gb.to_ulong());
+    std::size_t goal_combo = static_cast<std::size_t>(gb.to_ulong());
 
     // Is this the first example of this combo of completed goals?
-    if (top_picks.find(idx) == std::end(top_picks))
+    if (top_picks.find(goal_combo) == std::end(top_picks))
     {
-      top_picks[idx] = candidate;
+      top_picks[goal_combo] = candidate;
     } else
     {
       // If not, check if this candidate is better than the previous best
-      auto const current_best = top_picks.at(idx);
+      auto const current_best = top_picks.at(goal_combo);
+      std::size_t curr_best_scoring_moves = std::max_element(std::begin(current_best.goals()), std::end(current_best.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
+      std::size_t candidate_scoring_moves = std::max_element(std::begin(candidate.goals()), std::end(candidate.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
 
-      if (candidate.moves_taken() < current_best.moves_taken())
+      //spdlog::debug("This candidate scored it's {} goal(s) in {} moves: {} (full route: {})", candidate.goals().completed(), candidate_scoring_moves, candidate.route().first_n(candidate_scoring_moves), candidate.route());
+
+      //if (candidate.moves_taken() < current_best.moves_taken())
+      if (candidate_scoring_moves < curr_best_scoring_moves)
       {
-        top_picks[idx] = candidate;
+        top_picks[goal_combo] = candidate;
       }
     }
   }
@@ -156,7 +161,8 @@ auto puzzler::solve() -> void
     }
 
 
-    spdlog::info("{} - {} of {} goals ({}) in {} moves: {}", pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), pick.moves_taken(), pick.route());
+    std::size_t scoring_moves = std::max_element(std::begin(pick.goals()), std::end(pick.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
+    spdlog::info("{} - {} of {} goals ({}) in {} moves: {}", pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
   }
 }
 
