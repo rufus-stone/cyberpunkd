@@ -20,7 +20,7 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
     spdlog::error("Invalid grid size: {}", grid_size);
   }
 
-  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
   this->m_grid_width = grid_width;
 
   //std::size_t const num_goals = goals.size();
@@ -37,7 +37,7 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
     spdlog::error("Invalid grid size: {}", grid_size);
   }
 
-  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
   this->m_grid_width = grid_width;
 
   //std::size_t const num_goals = goals.size();
@@ -213,11 +213,6 @@ auto game_state_t::moves_taken() const -> std::size_t
 {
   return this->m_move_history.count();
 }
-
-/*auto game_state_t::scoring_moves_taken() const -> std::size_t
-{
-  return this->m_scoring_moves_taken;
-}*/
 
 auto game_state_t::buffer_size() const -> std::size_t
 {

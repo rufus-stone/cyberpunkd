@@ -55,8 +55,8 @@ auto preprocess_image(cv::Mat const &raw_img, double w_scale, double x_scale, do
   // Blur
   //cv::medianBlur(output, output, 3);
 
-  cv::imshow("Pre-proc", output);
-  cv::waitKey();
+  //cv::imshow("Pre-proc", output);
+  //cv::waitKey();
   return output;
 }
 
@@ -146,7 +146,7 @@ auto get_goal_list_from_img(cv::Mat const &raw_img, std::string const &tessdata_
     auto tmp = std::string{};
     for (auto const &segment : segments)
     {
-      tmp = tmp + segment + " ";
+      tmp += segment + " ";
       this_goal.push(segment);
     }
 

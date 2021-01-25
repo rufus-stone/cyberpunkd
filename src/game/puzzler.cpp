@@ -106,7 +106,7 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
 
     //spdlog::debug("{} - {} of {} goals in {} moves: {}", candidate.id(), candidate.goals().completed(), candidate.goals().total(), candidate.moves_taken(), candidate.route());
 
-    std::size_t goal_combo = static_cast<std::size_t>(gb.to_ulong());
+    auto goal_combo = static_cast<std::size_t>(gb.to_ulong());
 
     // Is this the first example of this combo of completed goals?
     if (optimal_solutions.find(goal_combo) == std::end(optimal_solutions))
