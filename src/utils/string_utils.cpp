@@ -50,12 +50,12 @@ auto split(std::string const &input, std::string const &delimiters) -> std::vect
 auto grid_to_string(std::vector<std::string> const &input) -> std::string
 {
   // What is the grid width?
-  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(input.size()));
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(input.size()));
 
   // We expect grids that are perfect squares
   if (grid_width * grid_width != input.size())
   {
-    spdlog::error("[❗] Invalid grid size: {}", input.size());
+    spdlog::error("Invalid grid size: {}", input.size());
     return std::string{};
   } else
   {

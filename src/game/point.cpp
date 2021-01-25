@@ -8,18 +8,24 @@
 namespace pnkd
 {
 
-point_t::point_t() : m_pos(0), m_grid_size(25)
+static constexpr std::size_t default_grid_size = 25;
+
+point_t::point_t() : m_pos(0), m_grid_size(default_grid_size)
 {
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(default_grid_size));
+
+  this->m_grid_width = grid_width;
+  this->m_valid = true;
 }
 
 point_t::point_t(std::size_t const grid_size) : m_pos(0), m_grid_size(grid_size)
 {
-  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
 
   // We expect grids that are perfect squares
   if (grid_width * grid_width != grid_size)
   {
-    spdlog::error("[❗] Invalid grid size: {}", grid_size);
+    spdlog::error("Invalid grid size: {}", grid_size);
     this->m_grid_width = 0;
     this->m_valid = false;
   } else
@@ -31,12 +37,12 @@ point_t::point_t(std::size_t const grid_size) : m_pos(0), m_grid_size(grid_size)
 
 point_t::point_t(std::size_t const pos, std::size_t const grid_size) : m_pos(pos), m_grid_size(grid_size)
 {
-  std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
+  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
 
   // We expect grids that are perfect squares
   if (grid_width * grid_width != grid_size)
   {
-    spdlog::error("[❗] Invalid grid size: {}", grid_size);
+    spdlog::error("Invalid grid size: {}", grid_size);
     this->m_grid_width = 0;
     this->m_valid = false;
   } else
