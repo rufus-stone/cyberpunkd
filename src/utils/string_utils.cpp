@@ -55,7 +55,7 @@ auto grid_to_string(std::vector<std::string> const &input) -> std::string
   // We expect grids that are perfect squares
   if (grid_width * grid_width != input.size())
   {
-    spdlog::error("[❗] Invalid grid size: {}", input.size());
+    spdlog::error("Invalid grid size: {}", input.size());
     return std::string{};
   } else
   {

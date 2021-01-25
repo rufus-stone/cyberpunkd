@@ -25,7 +25,7 @@ int main(int argc, const char **argv)
   // Can't have BOTH verbose mode AND quiet mode!
   if (verbose && quiet)
   {
-    spdlog::error("[❗] Cannot enable verbose logging AND quiet mode at the same time!");
+    spdlog::error("Cannot enable verbose logging AND quiet mode at the same time!");
     return EXIT_FAILURE;
   }
 
@@ -62,7 +62,7 @@ int main(int argc, const char **argv)
   // Check that the tessdata is there
   if (!pnkd::contains_tessdata(tessdata_dir))
   {
-    spdlog::error("[❗] Couldn't find tessdata!");
+    spdlog::error("Couldn't find tessdata!");
     return EXIT_FAILURE;
   }
 
@@ -72,7 +72,7 @@ int main(int argc, const char **argv)
   // Did we successfully load an image?
   if (img.empty())
   {
-    spdlog::error("[❗] Failed to load image!");
+    spdlog::error("Failed to load image!");
     return EXIT_FAILURE;
   }
 
@@ -82,7 +82,7 @@ int main(int argc, const char **argv)
   // Did the OCR fail?
   if (grid.empty())
   {
-    spdlog::error("[❗] Failed to extract any text from grid!");
+    spdlog::error("Failed to extract any text from grid!");
     return EXIT_FAILURE;
   }
 
@@ -90,12 +90,11 @@ int main(int argc, const char **argv)
 
   // OCR the goals
   auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
-  goal_list.init();
 
   // Did the OCR fail?
   if (goal_list.empty())
   {
-    spdlog::error("[❗] Failed to extract any text from goals!");
+    spdlog::error("Failed to extract any text from goals!");
     return EXIT_FAILURE;
   }
 

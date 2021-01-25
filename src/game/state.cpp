@@ -10,7 +10,6 @@
 namespace pnkd
 {
 
-////////////////////////////////////////////////////////////////
 game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}), m_direction(false), m_move_history(move_history_t{}), m_route(route_t{})
 {
   std::size_t const grid_size = grid.size();
@@ -18,7 +17,7 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
   // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
   if (grid_size != 25 && grid_size != 36)
   {
-    spdlog::error("[❗] Invalid grid size: {}", grid_size);
+    spdlog::error("Invalid grid size: {}", grid_size);
   }
 
   std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
@@ -35,7 +34,7 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
   // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
   if (grid_size != 25 && grid_size != 36)
   {
-    spdlog::error("[❗] Invalid grid size: {}", grid_size);
+    spdlog::error("Invalid grid size: {}", grid_size);
   }
 
   std::size_t const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));

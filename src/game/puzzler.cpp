@@ -129,7 +129,7 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
     }
   }
 
-  spdlog::info("Refined {} candidates down to {} optimal solutions:", this->m_candidates.size(), optimal_solutions.size());
+  spdlog::info("Refined {} candidates down to {} optimal solution(s):", this->m_candidates.size(), optimal_solutions.size());
 
   if (spdlog::get_level() != spdlog::level::off)
   {
