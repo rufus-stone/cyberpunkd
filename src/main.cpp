@@ -9,13 +9,15 @@
 #include <docopt/docopt.h>
 #include <opencv2/opencv.hpp>
 
-#include "usage.hpp"
-#include "utils/file_utils.hpp"
-#include "utils/string_utils.hpp"
-#include "ocr.hpp"
-#include "game/puzzler.hpp"
+#include "core/ocr.hpp"
+#include "core/puzzler.hpp"
+#include "core/usage.hpp"
+
 #include "game/state.hpp"
 #include "game/goal.hpp"
+
+#include "utils/file_utils.hpp"
+#include "utils/string_utils.hpp"
 
 
 using namespace std::chrono_literals;

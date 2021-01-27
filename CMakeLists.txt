@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.15...3.19)
 
-# Set up our project
+# +---------------+
+# | Project setup | 
+# +---------------+
+
 project(
   cyberpunkd
-  VERSION 0.1.0
+  VERSION 0.9.0
   DESCRIPTION "A Cyberpunk 2077 hacking mini-game solution finder"
   HOMEPAGE_URL "https://github.com/rufus-stone/cyberpunkd"
   LANGUAGES CXX)
@@ -12,24 +15,41 @@ project(
 add_executable(
   ${PROJECT_NAME}
   src/main.cpp
-  src/utils/file_utils.cpp
-  src/utils/string_utils.cpp
-  src/utils/uuid.cpp
-  src/ocr.cpp
+  src/core/ocr.cpp
+  src/core/puzzler.cpp
   src/game/point.cpp
   src/game/route.cpp
   src/game/goal.cpp
   src/game/state.cpp
-  src/game/puzzler.cpp)
+  src/utils/file_utils.cpp
+  src/utils/string_utils.cpp
+  src/utils/uuid.cpp)
 
 # We're using C++17
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
-# Set some compiler options/warnings
-target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra
-                                               -Wold-style-cast -Wpedantic)
+# Set compiler warnings
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE -W4 -WX)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -Werror -Wall -Wextra
+                                                 -Wold-style-cast -Wpedantic)
+endif()
 
-# Conan scripts
+# clang-tidy
+find_program(CLANGTIDY clang-tidy)
+if(CLANGTIDY)
+  set(CMAKE_CXX_CLANG_TIDY ${CLANGTIDY})
+else()
+  message(WARNING "clang-tidy not found")
+endif()
+
+
+# +--------------+
+# | Dependencies | 
+# +--------------+
+
+# Conan script
 include(${PROJECT_SOURCE_DIR}/cmake/conan.cmake)
 
 # Pull in the conan dependencies
@@ -56,6 +76,11 @@ target_link_libraries(
   PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp CONAN_PKG::opencv
           CONAN_PKG::tesseract CONAN_PKG::libarchive)
 
+
+# +--------------------+
+# | Post-build actions | 
+# +--------------------+
+
 # Copy the tesseract trained data to the build directory after building is
 # complete. This came from https://github.com/tesseract-ocr/tessdata
 add_custom_command(
@@ -64,7 +89,12 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tessdata
           $<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata)
 
-include(CTest) # This adds the BUILD_TESTING option (ON by default)
+
+# +-------+
+# | Tests | 
+# +-------+
+
+include(CTest)
 message("BUILD_TESTING: ${BUILD_TESTING}")
 if(BUILD_TESTING)
   enable_testing()

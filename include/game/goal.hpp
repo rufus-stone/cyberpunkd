@@ -10,8 +10,6 @@
 namespace pnkd
 {
 
-struct goal_t;
-
 struct goal_t
 {
   static constexpr std::size_t max_goals = 5;

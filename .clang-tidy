@@ -1,0 +1,25 @@
+---
+Checks:
+'*,
+
+-fuchsia-*,
+-google-*,
+-zircon-*,
+-abseil-*,
+-llvm-*,
+-llvmlibc-*,
+
+-cppcoreguidelines-avoid-magic-numbers,
+-cppcoreguidelines-owning-memory,
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+-cppcoreguidelines-pro-type-vararg,
+-hicpp-no-array-decay,
+-hicpp-signed-bitwise,
+-hicpp-vararg,
+-modernize-pass-by-value,
+-readability-else-after-return,
+-readability-magic-numbers'
+
+WarningsAsErrors:  ''
+HeaderFilterRegex: ''
+FormatStyle:       none
