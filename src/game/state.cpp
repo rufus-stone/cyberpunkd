@@ -1,5 +1,6 @@
 #include "game/state.hpp"
 
+#include <cmath>
 #include <numeric>
 #include <optional>
 #include <spdlog/spdlog.h>
@@ -10,38 +11,48 @@
 namespace pnkd
 {
 
-game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}), m_direction(false), m_move_history(move_history_t{}), m_route(route_t{})
+auto const is_perfect_square = [](std::size_t const n) {
+  // Ignore empty grids
+  if (n == 0)
+  {
+    return false;
+  }
+
+  std::size_t const sqrt = std::sqrt(n);
+
+  return (sqrt * sqrt == n);
+};
+
+
+game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}), m_direction(false) //, m_move_history(move_history_t{}), m_route(route_t{})
 {
   std::size_t const grid_size = grid.size();
 
-  // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
-  if (grid_size != 25 && grid_size != 36)
+  // We expect grids that are perfect squares
+  if (!is_perfect_square(grid_size))
   {
     spdlog::error("Invalid grid size: {}", grid_size);
   }
 
-  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
-  this->m_grid_width = grid_width;
+  this->m_grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
 
-  //std::size_t const num_goals = goals.size();
-  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
+  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, goals.size(), buffer_size);
 }
+
 
 game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size, point_t const &pos, bool const direction, move_history_t const &move_history, route_t const &route) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(pos), m_direction(direction), m_move_history(move_history), m_route(route)
 {
   std::size_t const grid_size = grid.size();
 
-  // We expect grids that are 5x5 (25) or 6x6 (36) (or 7x7??)
-  if (grid_size != 25 && grid_size != 36)
+  // We expect grids that are perfect squares
+  if (!is_perfect_square(grid_size))
   {
     spdlog::error("Invalid grid size: {}", grid_size);
   }
 
-  auto const grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
-  this->m_grid_width = grid_width;
+  this->m_grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
 
-  //std::size_t const num_goals = goals.size();
-  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, num_goals, buffer_size);
+  //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, goals.size(), buffer_size);
 }
 
 
@@ -54,13 +65,7 @@ auto game_state_t::goals() const -> goal_list_t const &
 auto game_state_t::is_valid_move(std::size_t const pos) const -> bool
 {
   // If the bit at index pos is set, then that means we've already move there, so return false
-  if (this->m_move_history.test(pos))
-  {
-    return false;
-  } else
-  {
-    return true;
-  }
+  return !this->m_move_history.test(pos);
 }
 
 

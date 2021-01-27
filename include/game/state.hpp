@@ -45,7 +45,7 @@ private:
   std::string m_parent_id;
 
 public:
-  game_state_t() = default; //delete;
+  game_state_t() = default;
   game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size);
   game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size, point_t const &pos, bool const direction, move_history_t const &move_history, route_t const &route);
   ~game_state_t() = default;

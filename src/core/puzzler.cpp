@@ -1,4 +1,4 @@
-#include "game/puzzler.hpp"
+#include "core/puzzler.hpp"
 
 #include <cmath>
 #include <bitset>
@@ -10,9 +10,10 @@
 #include <spdlog/spdlog.h>
 
 #include "game/goal.hpp"
-#include "utils/string_utils.hpp"
 #include "game/point.hpp"
 #include "game/state.hpp"
+
+#include "utils/string_utils.hpp"
 
 namespace pnkd
 {
@@ -94,7 +95,7 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
     auto gb = std::bitset<goal_t::max_goals>{};
 
     // Score each candidate - longer goal sequences and fewer moves are better
-    auto const goals = candidate.goals();
+    auto const &goals = candidate.goals();
 
     for (std::size_t i = 0; i < goals.total(); ++i)
     {
@@ -163,7 +164,7 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
       }
 
       std::size_t scoring_moves = std::max_element(std::begin(pick.goals()), std::end(pick.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
-      spdlog::info("{}: {} - {} of {} goals ({}) in {} moves: {}", combo, pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
+      spdlog::info("{:2d}: {} - {} of {} goals ({}) in {} moves: {}", combo, pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
     }
   }
 

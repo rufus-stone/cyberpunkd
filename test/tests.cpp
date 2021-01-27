@@ -8,12 +8,14 @@
 
 #include "catch.hpp"
 
-#include "utils/file_utils.hpp"
-#include "utils/string_utils.hpp"
-#include "ocr.hpp"
+#include "core/ocr.hpp"
+#include "core/puzzler.hpp"
+
 #include "game/goal.hpp"
 #include "game/state.hpp"
-#include "game/puzzler.hpp"
+
+#include "utils/file_utils.hpp"
+#include "utils/string_utils.hpp"
 
 #include "sample_image.hpp"
 

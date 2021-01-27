@@ -5,15 +5,15 @@ add_library(catch_main STATIC catch_main.cpp)
 add_executable(
   cyberpunkd_tests
   tests.cpp
-  ${PROJECT_SOURCE_DIR}/src/utils/file_utils.cpp
-  ${PROJECT_SOURCE_DIR}/src/utils/string_utils.cpp
-  ${PROJECT_SOURCE_DIR}/src/utils/uuid.cpp
-  ${PROJECT_SOURCE_DIR}/src/ocr.cpp
+  ${PROJECT_SOURCE_DIR}/src/core/ocr.cpp
+  ${PROJECT_SOURCE_DIR}/src/core/puzzler.cpp
   ${PROJECT_SOURCE_DIR}/src/game/point.cpp
   ${PROJECT_SOURCE_DIR}/src/game/route.cpp
   ${PROJECT_SOURCE_DIR}/src/game/goal.cpp
   ${PROJECT_SOURCE_DIR}/src/game/state.cpp
-  ${PROJECT_SOURCE_DIR}/src/game/puzzler.cpp)
+  ${PROJECT_SOURCE_DIR}/src/utils/file_utils.cpp
+  ${PROJECT_SOURCE_DIR}/src/utils/string_utils.cpp
+  ${PROJECT_SOURCE_DIR}/src/utils/uuid.cpp)
 
 target_compile_features(cyberpunkd_tests PRIVATE cxx_std_17)
 

@@ -1,4 +1,4 @@
-#include "ocr.hpp"
+#include "core/ocr.hpp"
 
 #include <opencv2/opencv.hpp>
 
@@ -16,21 +16,20 @@ auto preprocess_image(cv::Mat const &raw_img, double w_scale, double x_scale, do
   cv::Mat output;
 
   // Blur slightly
-  cv::bilateralFilter(raw_img, output, 9, 75, 75); // 9, 75, 75
+  cv::bilateralFilter(raw_img, output, 9, 75, 75);
 
   // Convert to grayscale
   cv::cvtColor(output, output, cv::COLOR_RGB2GRAY);
 
   // Convert to black/white only
-  cv::threshold(output, output, thresh, 255, cv::THRESH_BINARY_INV); // 70, 255, THRESH_BINARY_INV / THRESH_OTSU
+  cv::threshold(output, output, thresh, 255, cv::THRESH_BINARY_INV);
 
-  // Crop out the gubbins either side of the relevant section of the image
-  // Origin is the top left
   // How big is the image?
   std::size_t const width = output.size().width;
   std::size_t const height = output.size().height;
   spdlog::debug("Image resolution: {}x{}", width, height);
 
+  // Calc dimensions of relevant section of image (origin is top left)
   auto const w = width * w_scale;
   auto const x = 0 + (width * x_scale);
 
@@ -52,11 +51,6 @@ auto preprocess_image(cv::Mat const &raw_img, double w_scale, double x_scale, do
   // Dilate - MORPH_RECT / MORPH_CROSS / MORPH_ELLIPSE (MORPH_ELLIPSE produces best results)
   cv::dilate(output, output, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size{3, 7}));
 
-  // Blur
-  //cv::medianBlur(output, output, 3);
-
-  //cv::imshow("Pre-proc", output);
-  //cv::waitKey();
   return output;
 }
 
