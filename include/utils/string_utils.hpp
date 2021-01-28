@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <cstdint>
 
@@ -9,7 +10,7 @@
 namespace pnkd
 {
 
-static auto const whitespace = std::string{" \n\r\t\f\v"};
+static constexpr auto whitespace = std::string_view{" \n\r\t\f\v"};
 
 auto lstrip(std::string const &input) -> std::string;
 auto rstrip(std::string const &input) -> std::string;

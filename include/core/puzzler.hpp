@@ -20,10 +20,10 @@ private:
 
 public:
   puzzler() = delete;
-  puzzler(game_state_t const &game_state);
-  ~puzzler() = default;
+  explicit puzzler(game_state_t const &game_state);
 
-  auto play_one() -> std::queue<game_state_t>;
+  auto calculate_all_routes() -> void;
+  auto pick_best_routes() -> std::map<std::size_t, game_state_t>;
   auto solve() -> std::map<std::size_t, game_state_t>;
 };
 

@@ -36,14 +36,14 @@ struct goal_t
   auto num() const -> std::size_t;
 
   template<typename OStream>
-  friend OStream &operator<<(OStream &os, goal_t const &goal)
+  friend auto operator<<(OStream &os, goal_t const &goal) -> OStream &
   {
     os << goal.num() << ": " << goal.str();
     return os;
   }
 
   // To enable sorting a goal_list_t (which is basically just a vector of goal_t objects) by their m_num value
-  bool operator<(goal_t const &goal) const
+  auto operator<(goal_t const &goal) const -> bool
   {
     return (this->m_num < goal.num());
   }
@@ -59,12 +59,11 @@ private:
 
 public:
   goal_list_t() = default;
-  goal_list_t(std::vector<std::vector<std::string>> const &vec_of_goal_vecs);
-  ~goal_list_t() = default;
+  explicit goal_list_t(std::vector<std::vector<std::string>> const &vec_of_goal_vecs);
 
-  auto total() const -> std::size_t;
-  auto completed() const -> std::size_t;
-  auto remaining() const -> std::size_t;
+  [[nodiscard]] auto total() const -> std::size_t;
+  [[nodiscard]] auto completed() const -> std::size_t;
+  [[nodiscard]] auto remaining() const -> std::size_t;
 
   auto complete_one() -> void;
   auto fail_one() -> void;
@@ -72,7 +71,7 @@ public:
   auto init() -> void;
 
   template<typename OStream>
-  friend OStream &operator<<(OStream &os, goal_list_t const &goal_list)
+  friend auto operator<<(OStream &os, goal_list_t const &goal_list) -> OStream &
   {
     if (goal_list.size() == 1)
     {

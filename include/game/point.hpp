@@ -20,26 +20,25 @@ private:
 
 public:
   point_t();
-  point_t(std::size_t const grid_size);
+  explicit point_t(std::size_t const grid_size);
   point_t(std::size_t const pos, std::size_t const grid_size);
-  ~point_t() = default;
 
-  auto pos() const -> std::size_t;
-  auto x() const -> std::size_t;
-  auto y() const -> std::size_t;
-  auto row() const -> std::size_t;
-  auto col() const -> std::size_t;
-  auto x_y() const -> std::pair<std::size_t, std::size_t>;
-  auto col_row() const -> std::pair<std::size_t, std::size_t>;
-  auto str() const -> std::string;
+  [[nodiscard]] auto pos() const -> std::size_t;
+  [[nodiscard]] auto x() const -> std::size_t;
+  [[nodiscard]] auto y() const -> std::size_t;
+  [[nodiscard]] auto row() const -> std::size_t;
+  [[nodiscard]] auto col() const -> std::size_t;
+  [[nodiscard]] auto x_y() const -> std::pair<std::size_t, std::size_t>;
+  [[nodiscard]] auto col_row() const -> std::pair<std::size_t, std::size_t>;
+  [[nodiscard]] auto str() const -> std::string;
 
-  operator bool() const
+  explicit operator bool() const
   {
     return this->m_valid;
   }
 
   template<typename OStream>
-  friend OStream &operator<<(OStream &os, point_t const &p)
+  friend auto operator<<(OStream &os, point_t const &p) -> OStream &
   {
     return os << p.str();
   }

@@ -56,12 +56,6 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
 }
 
 
-auto game_state_t::goals() const -> goal_list_t const &
-{
-  return this->m_goal_list;
-}
-
-
 auto game_state_t::is_valid_move(std::size_t const pos) const -> bool
 {
   // If the bit at index pos is set, then that means we've already move there, so return false
@@ -199,19 +193,24 @@ auto game_state_t::make_move(std::size_t const move) const -> std::optional<game
 }
 
 
-auto game_state_t::pos() const -> point_t
+auto game_state_t::pos() const -> point_t const &
 {
   return this->m_pos;
 }
 
-auto game_state_t::route() const -> route_t
+auto game_state_t::route() const -> route_t const &
 {
   return this->m_route;
 }
 
-auto game_state_t::grid() const -> grid_t
+auto game_state_t::grid() const -> grid_t const &
 {
   return this->m_grid;
+}
+
+auto game_state_t::goals() const -> goal_list_t const &
+{
+  return this->m_goal_list;
 }
 
 auto game_state_t::moves_taken() const -> std::size_t
