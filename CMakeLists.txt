@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.15...3.19)
 
 project(
   cyberpunkd
-  VERSION 0.9.0
+  VERSION 1.0.1
   DESCRIPTION "A Cyberpunk 2077 hacking mini-game solution finder"
   HOMEPAGE_URL "https://github.com/rufus-stone/cyberpunkd"
   LANGUAGES CXX)
@@ -15,6 +15,7 @@ project(
 add_executable(
   ${PROJECT_NAME}
   src/main.cpp
+  src/core/notifier.cpp
   src/core/ocr.cpp
   src/core/puzzler.cpp
   src/game/point.cpp

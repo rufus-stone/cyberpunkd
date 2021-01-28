@@ -48,22 +48,22 @@ public:
   game_state_t() = default;
   game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size);
   game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size, point_t const &pos, bool const direction, move_history_t const &move_history, route_t const &route);
-  ~game_state_t() = default;
 
-  auto pos() const -> point_t;
-  auto route() const -> route_t;
-  auto grid() const -> grid_t;
-  auto goals() const -> goal_list_t const &;
-  auto moves_taken() const -> std::size_t;
-  auto buffer_size() const -> std::size_t;
-  auto id() const -> std::string const &;
-  auto parent_id() const -> std::string const &;
   auto set_parent_id(std::string const &id) -> void;
 
-  auto is_valid_move(std::size_t const pos) const -> bool;
-  auto list_all_valid_moves() const -> std::vector<std::size_t>;
-  auto make_move(std::size_t const move) const -> std::optional<game_state_t>;
-  auto score_goals(std::size_t const move) const -> goal_list_t;
+  [[nodiscard]] auto pos() const -> point_t const &;
+  [[nodiscard]] auto route() const -> route_t const &;
+  [[nodiscard]] auto grid() const -> grid_t const &;
+  [[nodiscard]] auto goals() const -> goal_list_t const &;
+  [[nodiscard]] auto moves_taken() const -> std::size_t;
+  [[nodiscard]] auto buffer_size() const -> std::size_t;
+  [[nodiscard]] auto id() const -> std::string const &;
+  [[nodiscard]] auto parent_id() const -> std::string const &;
+
+  [[nodiscard]] auto is_valid_move(std::size_t const pos) const -> bool;
+  [[nodiscard]] auto list_all_valid_moves() const -> std::vector<std::size_t>;
+  [[nodiscard]] auto make_move(std::size_t const move) const -> std::optional<game_state_t>;
+  [[nodiscard]] auto score_goals(std::size_t const move) const -> goal_list_t;
 };
 
 

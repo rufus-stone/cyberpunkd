@@ -28,10 +28,8 @@ puzzler::puzzler(game_state_t const &game_state)
 }
 
 
-auto puzzler::solve() -> std::map<std::size_t, game_state_t>
+auto puzzler::calculate_all_routes() -> void
 {
-  auto new_states = std::queue<game_state_t>{};
-
   int iters = 0;
 
   while (!this->m_game_states.empty() && this->should_continue)
@@ -86,7 +84,10 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
 
     // TODO: Check if it's now impossible to improve on the current solutions, and toggle this->should_continue to cancel further loops
   }
+}
 
+auto puzzler::pick_best_routes() -> std::map<std::size_t, game_state_t>
+{
   auto optimal_solutions = std::map<std::size_t, game_state_t>{};
 
   spdlog::info("Generated {} candidate routes", this->m_candidates.size());
@@ -130,45 +131,17 @@ auto puzzler::solve() -> std::map<std::size_t, game_state_t>
     }
   }
 
-  spdlog::info("Refined {} candidates down to {} optimal solution(s):", this->m_candidates.size(), optimal_solutions.size());
-
-  if (spdlog::get_level() != spdlog::level::off)
-  {
-    for (auto const &[combo, pick] : optimal_solutions)
-    {
-      auto goal_vec = std::vector<std::string>{};
-
-      for (auto const &goal : pick.goals())
-      {
-        if (goal.m_completed)
-        {
-          std::stringstream ss;
-          ss << goal.m_num << ": " << goal.str();
-          goal_vec.push_back(ss.str());
-        }
-      }
-
-      std::stringstream ss;
-      if (goal_vec.size() == 1)
-      {
-        ss << "[" << goal_vec[0] << "]";
-      } else
-      {
-        ss << "[" << goal_vec[0];
-        for (std::size_t i = 1; i < goal_vec.size(); ++i)
-        {
-          ss << ", " << goal_vec[i];
-        }
-
-        ss << "]";
-      }
-
-      std::size_t scoring_moves = std::max_element(std::begin(pick.goals()), std::end(pick.goals()), [](auto const &lhs, auto const &rhs) { return lhs.moves_taken() < rhs.moves_taken(); })->moves_taken();
-      spdlog::info("{:2d}: {} - {} of {} goals ({}) in {} moves: {}", combo, pick.id(), pick.goals().completed(), pick.goals().total(), ss.str(), scoring_moves, pick.route().first_n(scoring_moves));
-    }
-  }
+  spdlog::info("Refined {} candidates down to {} optimal solution(s)", this->m_candidates.size(), optimal_solutions.size());
 
   return optimal_solutions;
+}
+
+
+auto puzzler::solve() -> std::map<std::size_t, game_state_t>
+{
+  this->calculate_all_routes();
+
+  return this->pick_best_routes();
 }
 
 } // namespace pnkd

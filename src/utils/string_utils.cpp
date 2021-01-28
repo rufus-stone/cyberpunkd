@@ -66,7 +66,7 @@ auto grid_to_string(std::vector<std::string> const &input) -> std::string
       ss << input[i] << ((i + 1) % grid_width == 0 ? "\n" : " ");
     }
 
-    return strip(ss.str());
+    return rstrip(ss.str());
   }
 }
 

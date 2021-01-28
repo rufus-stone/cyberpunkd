@@ -9,6 +9,7 @@
 #include <docopt/docopt.h>
 #include <opencv2/opencv.hpp>
 
+#include "core/notifier.hpp"
 #include "core/ocr.hpp"
 #include "core/puzzler.hpp"
 #include "core/usage.hpp"
@@ -121,7 +122,7 @@ int main(int argc, const char **argv)
       return EXIT_FAILURE; // TODO: Handle this better than just quitting
     }
 
-    spdlog::info("grid_text:\n\n{}\n", pnkd::grid_to_string(grid));
+    spdlog::info("Grid:\n\n{}\n", pnkd::grid_to_string(grid));
 
     // OCR the goals
     auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
@@ -133,12 +134,12 @@ int main(int argc, const char **argv)
       return EXIT_FAILURE; // TODO: Handle this better than just quitting
     }
 
-    spdlog::info("goal_text:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
+    spdlog::info("Target Sequences:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
 
-    spdlog::info("Total goals: {}", goal_list.total());
+    spdlog::debug("Total goals: {}", goal_list.total());
     for (auto const &goal : goal_list)
     {
-      spdlog::info("{}", goal.str());
+      spdlog::debug("{}", goal.str());
     }
 
     // Create our initial game state
@@ -149,6 +150,7 @@ int main(int argc, const char **argv)
     auto const solutions = puzzler.solve();
 
     // TODO: Inform user of optimal solutions
+    pnkd::show_solutions(solutions);
 
     auto const finish = std::chrono::high_resolution_clock::now();
 
@@ -159,7 +161,7 @@ int main(int argc, const char **argv)
 
     previous_image_path = latest_image_path;
 
-    std::this_thread::sleep_for(500ms); // Give it half a second before checking for new screenshots, to avoid hammering the CPU
+    std::this_thread::sleep_for(1s); // Give it a second before checking for new screenshots, to avoid hammering the CPU
   }
 
   return EXIT_SUCCESS;
