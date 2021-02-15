@@ -38,23 +38,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install and configure Conan on Linux
-        if: ${{matrix.config.os == 'ubuntu-latest'}}
+      - name: Install Conan
         env:
           CC: ${{matrix.config.cc}}
           CXX: ${{matrix.config.cxx}}
-        run: |
-          pip install conan
-          ./home/runner/.local/bin/conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+        run: pip install conan
 
-      - name: Install and configure Conan on Windows
-        if: ${{matrix.config.os == 'windows-latest'}}
+      - name: Update PATH for linux runners
+        # Pip installs Conan to a dir that is not in PATH on the Linux runners, for some reason
+        if: ${{matrix.config.os == 'ubuntu-latest'}}
+        run: echo "/home/runner/.local/bin" >> $GITHUB_PATH
+
+      - name: Add bincrafters remote to Conan
         env:
           CC: ${{matrix.config.cc}}
           CXX: ${{matrix.config.cxx}}
-        run: |
-          pip install conan
-          conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+        run: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
       - name: Install Linux dependencies
         if: ${{matrix.config.os == 'ubuntu-latest'}}
@@ -62,11 +61,6 @@ jobs:
           CC: ${{matrix.config.cc}}
           CXX: ${{matrix.config.cxx}}
         run: sudo apt-get install libgtk2.0-dev
-
-      - name: Update PATH for linux runners
-        # Pip installs Conan to a dir that is not in PATH on the Linux runners, for some reason
-        if: ${{matrix.config.os == 'ubuntu-latest'}}
-        run: echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
       - name: Create Build Environment
         env:
