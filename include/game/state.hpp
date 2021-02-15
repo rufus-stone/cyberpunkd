@@ -26,15 +26,15 @@ class game_state_t
 
 private:
   grid_t m_grid;
-  std::size_t m_grid_size;
-  std::size_t m_grid_width;
+  std::size_t m_grid_size{};
+  std::size_t m_grid_width{};
 
   goal_list_t m_goal_list;
 
-  std::size_t m_buffer_size;
+  std::size_t m_buffer_size{};
 
   point_t m_pos;
-  bool m_direction;
+  bool m_direction{};
 
   move_history_t m_move_history;
   route_t m_route;

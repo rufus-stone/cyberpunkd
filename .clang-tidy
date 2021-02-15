@@ -17,6 +17,7 @@ Checks:
 -hicpp-signed-bitwise,
 -hicpp-vararg,
 -modernize-pass-by-value,
+-readability-avoid-const-params-in-decls,
 -readability-else-after-return,
 -readability-magic-numbers'
 

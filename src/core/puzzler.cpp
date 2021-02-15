@@ -32,7 +32,10 @@ auto puzzler::calculate_all_routes() -> void
 {
   int iters = 0;
 
-  while (!this->m_game_states.empty() && this->should_continue)
+  // How many possible goal combos are there at most?
+  std::size_t const pos_combos = std::pow(2, this->m_total_goals) - 1;
+
+  while (!this->m_game_states.empty())
   {
     spdlog::debug("\n----------------------\nIteration {}\n----------------------", iters++);
 
@@ -71,7 +74,7 @@ auto puzzler::calculate_all_routes() -> void
           // Was the move worth adding to the list of candidates?
           if (next_game_state->goals().remaining() == 0 && next_game_state->goals().completed() > 0)
           {
-            spdlog::debug("Candidate: {} of {} goals in {} moves", next_game_state->goals().completed(), next_game_state->goals().total(), next_game_state->moves_taken());
+            spdlog::debug("Candidate: {} of {} goal(s) in {} moves", next_game_state->goals().completed(), next_game_state->goals().total(), next_game_state->moves_taken());
 
             this->m_candidates.push_back(next_game_state.value());
           }
@@ -82,7 +85,12 @@ auto puzzler::calculate_all_routes() -> void
     // Pop this state now that we've dealt with it
     this->m_game_states.pop();
 
-    // TODO: Check if it's now impossible to improve on the current solutions, and toggle this->should_continue to cancel further loops
+    // Have we found candidate solutions to all the possible combos of target sequences? If so, we can't improve further so break out of the loop
+    if (this->m_candidates.size() == pos_combos)
+    {
+      spdlog::info("All goal combos found!"); // THIS DOESN'T WORK - need to check optimal routes not candidate routes
+      break;
+    }
   }
 }
 
@@ -90,7 +98,7 @@ auto puzzler::pick_best_routes() -> std::map<std::size_t, game_state_t>
 {
   auto optimal_solutions = std::map<std::size_t, game_state_t>{};
 
-  spdlog::info("Generated {} candidate routes", this->m_candidates.size());
+  spdlog::info("Generated {} candidate route(s)", this->m_candidates.size());
   for (auto const &candidate : this->m_candidates)
   {
     auto gb = std::bitset<goal_t::max_goals>{};
@@ -123,7 +131,6 @@ auto puzzler::pick_best_routes() -> std::map<std::size_t, game_state_t>
 
       //spdlog::debug("This candidate scored it's {} goal(s) in {} moves: {} (full route: {})", candidate.goals().completed(), candidate_scoring_moves, candidate.route().first_n(candidate_scoring_moves), candidate.route());
 
-      //if (candidate.moves_taken() < current_best.moves_taken())
       if (candidate_scoring_moves < curr_best_scoring_moves)
       {
         optimal_solutions[goal_combo] = candidate;
@@ -131,7 +138,7 @@ auto puzzler::pick_best_routes() -> std::map<std::size_t, game_state_t>
     }
   }
 
-  spdlog::info("Refined {} candidates down to {} optimal solution(s)", this->m_candidates.size(), optimal_solutions.size());
+  spdlog::info("Refined {} candidate(s) down to {} optimal solution(s)", this->m_candidates.size(), optimal_solutions.size());
 
   return optimal_solutions;
 }

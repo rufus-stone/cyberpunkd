@@ -17,17 +17,18 @@
 #include "game/state.hpp"
 #include "game/goal.hpp"
 
+#include "gui/gui.hpp"
 #include "utils/file_utils.hpp"
 #include "utils/string_utils.hpp"
 
 
 using namespace std::chrono_literals;
 
-int main(int argc, const char **argv)
+auto main(int argc, const char **argv) -> int
 {
   auto const args = docopt::docopt(pnkd::usage, {std::next(argv), std::next(argv, argc)},
     true,                // show help if requested
-    "cyberpunkd 0.1.0"); // version string
+    "cyberpunkd 1.1.0"); // version string
 
   bool const verbose = args.at("--verbose").asBool();
   bool const quiet = args.at("--quiet").asBool();
@@ -86,82 +87,93 @@ int main(int argc, const char **argv)
   // Start watching the screenshots folder
   auto previous_image_path = std::filesystem::path{};
 
-  while (true)
+
+  bool const headless = args.at("--headless").asBool();
+
+  if (!headless)
   {
-    auto const start = std::chrono::high_resolution_clock::now();
+    // Start the gui
+    pnkd::gui::start();
 
-    auto const latest_image_path = pnkd::get_path_to_latest_screenshot(path);
-
-    if (latest_image_path == previous_image_path)
+  } else
+  {
+    while (true)
     {
-      //spdlog::info("No new images yet...");
-      std::this_thread::sleep_for(1s);
-      continue;
+      auto const start = std::chrono::high_resolution_clock::now();
+
+      auto const latest_image_path = pnkd::get_path_to_latest_screenshot(path);
+
+      if (latest_image_path == previous_image_path)
+      {
+        //spdlog::info("No new images yet...");
+        std::this_thread::sleep_for(1s);
+        continue;
+      }
+
+      spdlog::info("----------------------------");
+      spdlog::info("Processing new screenshot: {}", std::filesystem::absolute(latest_image_path).string());
+
+      // Load the latest image
+      cv::Mat img = pnkd::get_latest_screenshot(path);
+
+      // Did we successfully load an image?
+      if (img.empty())
+      {
+        spdlog::error("Failed to load image!");
+        return EXIT_FAILURE; // TODO: Handle this better than just quitting
+      }
+
+      // OCR the grid
+      auto const grid = pnkd::get_grid_from_img(img, tessdata_dir);
+
+      // Did the OCR fail?
+      if (grid.empty())
+      {
+        spdlog::error("Failed to extract any text from grid!");
+        return EXIT_FAILURE; // TODO: Handle this better than just quitting
+      }
+
+      spdlog::info("Grid:\n\n{}\n", pnkd::grid_to_string(grid));
+
+      // OCR the goals
+      auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
+
+      // Did the OCR fail?
+      if (goal_list.empty())
+      {
+        spdlog::error("Failed to extract any text from goals!");
+        return EXIT_FAILURE; // TODO: Handle this better than just quitting
+      }
+
+      spdlog::info("Target Sequences:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
+
+      spdlog::debug("Total goals: {}", goal_list.total());
+      for (auto const &goal : goal_list)
+      {
+        spdlog::debug("{}", goal.str());
+      }
+
+      // Create our initial game state
+      auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
+
+      // Create a puzzler and solve
+      auto puzzler = pnkd::puzzler{initial_state};
+      auto const solutions = puzzler.solve();
+
+      // TODO: Inform user of optimal solutions
+      pnkd::show_solutions(solutions);
+
+      auto const finish = std::chrono::high_resolution_clock::now();
+
+      auto const nanoseconds_taken = (finish - start);
+      auto const milliseconds_taken = std::chrono::duration<double, std::milli>(nanoseconds_taken).count();
+
+      spdlog::info("Solved in {:.0f}ms", milliseconds_taken);
+
+      previous_image_path = latest_image_path;
+
+      std::this_thread::sleep_for(1s); // Give it a second before checking for new screenshots, to avoid hammering the CPU
     }
-
-    spdlog::info("----------------------------");
-    spdlog::info("Processing new screenshot: {}", std::filesystem::absolute(latest_image_path).string());
-
-    // Load the latest image
-    cv::Mat img = pnkd::get_latest_screenshot(path);
-
-    // Did we successfully load an image?
-    if (img.empty())
-    {
-      spdlog::error("Failed to load image!");
-      return EXIT_FAILURE; // TODO: Handle this better than just quitting
-    }
-
-    // OCR the grid
-    auto const grid = pnkd::get_grid_from_img(img, tessdata_dir);
-
-    // Did the OCR fail?
-    if (grid.empty())
-    {
-      spdlog::error("Failed to extract any text from grid!");
-      return EXIT_FAILURE; // TODO: Handle this better than just quitting
-    }
-
-    spdlog::info("Grid:\n\n{}\n", pnkd::grid_to_string(grid));
-
-    // OCR the goals
-    auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
-
-    // Did the OCR fail?
-    if (goal_list.empty())
-    {
-      spdlog::error("Failed to extract any text from goals!");
-      return EXIT_FAILURE; // TODO: Handle this better than just quitting
-    }
-
-    spdlog::info("Target Sequences:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
-
-    spdlog::debug("Total goals: {}", goal_list.total());
-    for (auto const &goal : goal_list)
-    {
-      spdlog::debug("{}", goal.str());
-    }
-
-    // Create our initial game state
-    auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
-
-    // Create a puzzler and solve
-    auto puzzler = pnkd::puzzler{initial_state};
-    auto const solutions = puzzler.solve();
-
-    // TODO: Inform user of optimal solutions
-    pnkd::show_solutions(solutions);
-
-    auto const finish = std::chrono::high_resolution_clock::now();
-
-    auto const nanoseconds_taken = (finish - start);
-    auto const milliseconds_taken = std::chrono::duration<double, std::milli>(nanoseconds_taken).count();
-
-    spdlog::info("Solved in {:.0f}ms", milliseconds_taken);
-
-    previous_image_path = latest_image_path;
-
-    std::this_thread::sleep_for(1s); // Give it a second before checking for new screenshots, to avoid hammering the CPU
   }
 
   return EXIT_SUCCESS;

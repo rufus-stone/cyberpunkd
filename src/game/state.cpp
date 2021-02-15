@@ -24,7 +24,7 @@ auto const is_perfect_square = [](std::size_t const n) {
 };
 
 
-game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}), m_direction(false) //, m_move_history(move_history_t{}), m_route(route_t{})
+game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::size_t const buffer_size) : m_grid(grid), m_grid_size(grid.size()), m_goal_list(goals), m_buffer_size(buffer_size), m_pos(point_t{grid.size()}) //, m_direction(false) //, m_move_history(move_history_t{}), m_route(route_t{})
 {
   std::size_t const grid_size = grid.size();
 
@@ -35,6 +35,8 @@ game_state_t::game_state_t(grid_t const &grid, goal_list_t const &goals, std::si
   }
 
   this->m_grid_width = static_cast<std::size_t>(std::sqrt(grid_size));
+
+  this->m_parent_id = "00000000-0000-0000-0000-000000000000";
 
   //spdlog::debug("Created game_state_t for a {}x{} ({}) grid with {} goals and a buffer size of {}", grid_width, grid_width, grid_size, goals.size(), buffer_size);
 }

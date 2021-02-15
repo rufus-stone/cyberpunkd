@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.15...3.19)
 
 # +---------------+
-# | Project setup | 
+# | Project setup |
 # +---------------+
 
 project(
   cyberpunkd
-  VERSION 1.0.1
+  VERSION 1.1.0
   DESCRIPTION "A Cyberpunk 2077 hacking mini-game solution finder"
   HOMEPAGE_URL "https://github.com/rufus-stone/cyberpunkd"
   LANGUAGES CXX)
@@ -22,6 +22,11 @@ add_executable(
   src/game/route.cpp
   src/game/goal.cpp
   src/game/state.cpp
+  src/gui/gui.cpp
+  src/gui/menubar.cpp
+  src/gui/config_bar.cpp
+  src/gui/about.cpp
+  src/gui/demo.cpp
   src/utils/file_utils.cpp
   src/utils/string_utils.cpp
   src/utils/uuid.cpp)
@@ -45,9 +50,8 @@ else()
   message(WARNING "clang-tidy not found")
 endif()
 
-
 # +--------------+
-# | Dependencies | 
+# | Dependencies |
 # +--------------+
 
 # Conan script
@@ -62,6 +66,7 @@ conan_cmake_run(
   opencv/4.5.0
   spdlog/1.8.2
   docopt.cpp/0.6.3
+  imgui-sfml/2.1@bincrafters/stable
   BASIC_SETUP
   CMAKE_TARGETS
   BUILD
@@ -75,11 +80,10 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp CONAN_PKG::opencv
-          CONAN_PKG::tesseract CONAN_PKG::libarchive)
-
+          CONAN_PKG::tesseract CONAN_PKG::libarchive CONAN_PKG::imgui-sfml)
 
 # +--------------------+
-# | Post-build actions | 
+# | Post-build actions |
 # +--------------------+
 
 # Copy the tesseract trained data to the build directory after building is
@@ -90,9 +94,8 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tessdata
           $<TARGET_FILE_DIR:${PROJECT_NAME}>/tessdata)
 
-
 # +-------+
-# | Tests | 
+# | Tests |
 # +-------+
 
 include(CTest)

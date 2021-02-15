@@ -14,7 +14,6 @@ class puzzler
 
 private:
   std::queue<game_state_t> m_game_states;
-  bool should_continue = true;
   std::vector<game_state_t> m_candidates;
   std::size_t m_total_goals;
 

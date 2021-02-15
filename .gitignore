@@ -34,5 +34,7 @@
 # VSCode
 .vscode/
 
-# Build folder
+# Other stuff
 build/
+.cache/
+imgui.ini
