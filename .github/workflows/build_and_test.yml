@@ -77,11 +77,11 @@ jobs:
         if: ${{matrix.config.os == 'ubuntu-latest'}}
         working-directory: ${{runner.workspace}}/build/bin/
         shell: bash
-        run: ./cyberpunkd_tests --headless
+        run: ./cyberpunkd_tests
 
       - name: Run Tests on Windows
         if: ${{matrix.config.os == 'windows-latest'}}
         working-directory: ${{runner.workspace}}\\build\\bin
         run: |
           dir ${{runner.workspace}}\\build\\bin
-          ./cyberpunkd_tests.exe --headless
+          ./cyberpunkd_tests.exe
