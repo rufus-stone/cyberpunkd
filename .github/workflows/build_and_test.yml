@@ -38,11 +38,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Conan
+      - name: Install and configure Conan
         env:
           CC: ${{matrix.config.cc}}
           CXX: ${{matrix.config.cxx}}
-        run: pip install conan
+        run: |
+          pip install conan
+          conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
       - name: Install Linux dependencies
         if: ${{matrix.config.os == 'ubuntu-latest'}}

@@ -22,7 +22,7 @@ inline auto help_marker(const char *desc) -> void
 }
 
 
-auto enum_to_string(ImGuiCol color) -> std::string
+inline auto enum_to_string(ImGuiCol color) -> std::string
 {
   switch (color)
   {
