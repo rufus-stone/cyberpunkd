@@ -60,7 +60,7 @@ jobs:
         env:
           CC: ${{matrix.config.cc}}
           CXX: ${{matrix.config.cxx}}
-        run: sudo apt-get install libgtk2.0-dev
+        run: sudo apt-get install libgtk2.0-dev libgl-dev
 
       - name: Create Build Environment
         env:
