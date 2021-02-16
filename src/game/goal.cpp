@@ -27,7 +27,7 @@ goal_list_t::goal_list_t(std::vector<std::vector<std::string>> const &vec_of_goa
     auto this_goal = std::queue<std::string>{};
 
     auto goal_str = std::string{};
-    goal_str.reserve((goal.size() * 3) - 1);
+    goal_str.reserve(goal.size() * 3);
 
     for (auto const &segment : goal)
     {

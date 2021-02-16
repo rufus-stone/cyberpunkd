@@ -12,6 +12,7 @@
 #include "core/notifier.hpp"
 #include "core/ocr.hpp"
 #include "core/puzzler.hpp"
+#include "core/watcher.hpp"
 #include "core/usage.hpp"
 
 #include "game/state.hpp"
@@ -59,9 +60,25 @@ auto main(int argc, const char **argv) -> int
     spdlog::debug("{}: {}", arg.first, ss.str());
   }
 
-  // Get the buffer size screenshots folder
-  std::size_t const buffer_size = static_cast<std::size_t>(args.at("<buffer_size>").asLong());
-  spdlog::info("Buffer size: {}", buffer_size);
+  // Get the buffer size - return 0 on failure
+  auto get_buffer_size = [&args]() -> std::size_t {
+    try
+    {
+      std::size_t const s = static_cast<std::size_t>(args.at("<buffer_size>").asLong());
+      spdlog::info("Buffer size: {}", s);
+      return s;
+    } catch (...)
+    {
+      return 0;
+    }
+  };
+
+  std::size_t const buffer_size = get_buffer_size();
+  if (buffer_size == 0)
+  {
+    spdlog::error("Buffer size must be a number greater than 0!");
+    return EXIT_FAILURE;
+  }
 
   // Get the user-specified path to the screenshots folder
   std::string const path = args.at("<path>").asString();
@@ -84,96 +101,29 @@ auto main(int argc, const char **argv) -> int
     return EXIT_FAILURE;
   }
 
+  // Get the user-specified sleep duration, if present - default to 1 second
+  std::size_t sleep_for = args.at("--sleep").isLong() ? args.at("--sleep").asLong() : 1;
+
   // Start watching the screenshots folder
   auto previous_image_path = std::filesystem::path{};
-
 
   bool const headless = args.at("--headless").asBool();
 
   if (!headless)
   {
-    // Start the gui
+    // Start the gui - this will handle the watcher, etc.
     pnkd::gui::start();
 
   } else
   {
-    while (true)
-    {
-      auto const start = std::chrono::high_resolution_clock::now();
+    // Start the watcher directly
+    auto watcher = pnkd::watcher{
+      path,
+      tessdata_dir,
+      buffer_size,
+      sleep_for};
 
-      auto const latest_image_path = pnkd::get_path_to_latest_screenshot(path);
-
-      if (latest_image_path == previous_image_path)
-      {
-        //spdlog::info("No new images yet...");
-        std::this_thread::sleep_for(1s);
-        continue;
-      }
-
-      spdlog::info("----------------------------");
-      spdlog::info("Processing new screenshot: {}", std::filesystem::absolute(latest_image_path).string());
-
-      // Load the latest image
-      cv::Mat img = pnkd::get_latest_screenshot(path);
-
-      // Did we successfully load an image?
-      if (img.empty())
-      {
-        spdlog::error("Failed to load image!");
-        return EXIT_FAILURE; // TODO: Handle this better than just quitting
-      }
-
-      // OCR the grid
-      auto const grid = pnkd::get_grid_from_img(img, tessdata_dir);
-
-      // Did the OCR fail?
-      if (grid.empty())
-      {
-        spdlog::error("Failed to extract any text from grid!");
-        return EXIT_FAILURE; // TODO: Handle this better than just quitting
-      }
-
-      spdlog::info("Grid:\n\n{}\n", pnkd::grid_to_string(grid));
-
-      // OCR the goals
-      auto goal_list = pnkd::get_goal_list_from_img(img, tessdata_dir);
-
-      // Did the OCR fail?
-      if (goal_list.empty())
-      {
-        spdlog::error("Failed to extract any text from goals!");
-        return EXIT_FAILURE; // TODO: Handle this better than just quitting
-      }
-
-      spdlog::info("Target Sequences:\n\n{}\n", pnkd::goal_list_to_string(goal_list));
-
-      spdlog::debug("Total goals: {}", goal_list.total());
-      for (auto const &goal : goal_list)
-      {
-        spdlog::debug("{}", goal.str());
-      }
-
-      // Create our initial game state
-      auto const initial_state = pnkd::game_state_t{grid, goal_list, buffer_size};
-
-      // Create a puzzler and solve
-      auto puzzler = pnkd::puzzler{initial_state};
-      auto const solutions = puzzler.solve();
-
-      // TODO: Inform user of optimal solutions
-      pnkd::show_solutions(solutions);
-
-      auto const finish = std::chrono::high_resolution_clock::now();
-
-      auto const nanoseconds_taken = (finish - start);
-      auto const milliseconds_taken = std::chrono::duration<double, std::milli>(nanoseconds_taken).count();
-
-      spdlog::info("Solved in {:.0f}ms", milliseconds_taken);
-
-      previous_image_path = latest_image_path;
-
-      std::this_thread::sleep_for(1s); // Give it a second before checking for new screenshots, to avoid hammering the CPU
-    }
+    watcher.start();
   }
 
   return EXIT_SUCCESS;

@@ -18,6 +18,7 @@ add_executable(
   src/core/notifier.cpp
   src/core/ocr.cpp
   src/core/puzzler.cpp
+  src/core/watcher.cpp
   src/game/point.cpp
   src/game/route.cpp
   src/game/goal.cpp

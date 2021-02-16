@@ -21,6 +21,7 @@ Options:
   -V, --verbose           Enable verbose logging (for debugging purposes - incompatible with quiet mode)
   -q, --quiet             Enable quiet mode. Only errors will be logged (incompatible with verbose mode)
   -t, --tessdata <path>   Path to the folder containing tesseract trained data
+  -s, --sleep <seconds>   How many seconds to wait before checking for new screenshots (must be a number)
   -l, --headless          Run in headless mode (no GUI)
 )";
 

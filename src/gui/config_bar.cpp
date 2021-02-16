@@ -1,5 +1,6 @@
 #include "gui/config_bar.hpp"
 
+#include <imgui-SFML.h>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 
@@ -105,11 +106,13 @@ auto config_bar(pnkd::gui::state &g) -> void
 
     /*
     auto &colors = ImGui::GetStyle().Colors;
-    for (std::size_t i = 0; i < ImGuiCol_COUNT; ++i)
+    for (std::size_t i = 0; i < ImGuiCol_COUNT; ++i).l;//
     {
       ImGui::Text("%s: %0.f, %0.f, %0.f, %0.f", enum_to_string(i).data(), colors[i].x * 255, colors[i].y * 255, colors[i].z * 255, colors[i].w * 255);
     }
     */
+
+    //auto texture = sf::Texture{};
 
     ImGui::End();
   }

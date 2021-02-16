@@ -11,6 +11,90 @@
 namespace pnkd
 {
 
+ocr_t::ocr_t(std::string const &tessdate_dir) : m_tessdata_dir(tessdate_dir) {}
+
+
+auto ocr_t::get_string_from_image(cv::Mat const &img, std::string const &char_list) -> std::string
+{
+  std::size_t constexpr bytes_per_pixel = 1; // Our preprocessed image is black and white, so only 1 byte. Set this to 3 for RGB, etc.
+
+  auto ocr = std::make_unique<tesseract::TessBaseAPI>();
+  ocr->Init(this->m_tessdata_dir.c_str(), "eng", tesseract::OEM_TESSERACT_ONLY); // OEM_LSTM_ONLY / OEM_TESSERACT_ONLY
+
+  ocr->SetImage(img.data, img.cols, img.rows, bytes_per_pixel, img.step);
+  ocr->SetSourceResolution(300);
+
+  ocr->SetVariable("tessedit_char_whitelist", char_list.c_str());
+
+  char *text = ocr->GetUTF8Text();
+  auto const img_text = std::string{text};
+  delete[] text; // The Tesseract API requires us to delete[] the pointer ourselves to avoid a memory leak
+
+  ocr->End();
+
+  return pnkd::strip(img_text);
+}
+
+auto ocr_t::get_grid_from_img(cv::Mat const &raw_img) -> std::vector<std::string>
+{
+  cv::Mat img = pnkd::ocr_t::preprocess_image(raw_img, 0.19, 0.16, 0.35, 0.315);
+
+  auto const grid_text = this->get_string_from_image(img);
+
+  // Did the OCR generate any text?
+  if (grid_text.empty())
+  {
+    spdlog::error("Failed to extract any text from grid!");
+    return std::vector<std::string>{};
+  }
+
+  auto grid = pnkd::split(grid_text, "\n ");
+
+  return fix_ocr(grid);
+}
+
+
+auto ocr_t::get_goal_list_from_img(cv::Mat const &raw_img) -> pnkd::goal_list_t
+{
+  cv::Mat img = pnkd::ocr_t::preprocess_image(raw_img, 0.11, 0.437, 0.25, 0.3, 80);
+
+  auto const goal_text = this->get_string_from_image(img);
+
+  // Did the OCR generate any text?
+  if (goal_text.empty())
+  {
+    spdlog::error("Failed to extract any text from goals!");
+    return pnkd::goal_list_t{};
+  }
+
+  // Parse goals OCR text
+  auto goal_list = pnkd::goal_list_t{};
+  auto const goals_lines = pnkd::split(goal_text, "\n");
+  std::size_t goal_num = 0;
+  for (auto const &goal : goals_lines)
+  {
+    auto const segments = fix_ocr(pnkd::split(goal, " "));
+
+    auto this_goal = std::queue<std::string>{};
+
+    auto tmp = std::string{};
+    for (auto const &segment : segments)
+    {
+      tmp += segment + " ";
+      this_goal.push(segment);
+    }
+
+    tmp = pnkd::strip(tmp);
+    goal_list.emplace_back(pnkd::goal_t{this_goal, tmp, goal_num++});
+  }
+
+  goal_list.init(); // This sets the total number of goals and the number of goals remaining from the size of the internal vector
+
+  return goal_list;
+}
+
+
+/*
 auto preprocess_image(cv::Mat const &raw_img, double w_scale, double x_scale, double h_scale, double y_scale, double thresh) -> cv::Mat
 {
   cv::Mat output;
@@ -152,5 +236,6 @@ auto get_goal_list_from_img(cv::Mat const &raw_img, std::string const &tessdata_
 
   return goal_list;
 }
+*/
 
 } // namespace pnkd

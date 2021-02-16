@@ -55,7 +55,8 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 
     WHEN(" the grid is fed to Tesseract")
     {
-      auto const grid = pnkd::get_grid_from_img(img);
+      auto ocr = pnkd::ocr_t{};
+      auto const grid = ocr.get_grid_from_img(img);
 
       THEN(" the correct grid data is identified")
       {
@@ -66,7 +67,8 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 
     WHEN(" the goals are fed to Tesseract")
     {
-      auto const goal_list = pnkd::get_goal_list_from_img(img);
+      auto ocr = pnkd::ocr_t{};
+      auto const goal_list = ocr.get_goal_list_from_img(img);
 
       THEN(" the correct goals are identified")
       {
@@ -82,7 +84,7 @@ SCENARIO("Tesseract on sample image", "[ocr][tessdata]")
 ////////////////////////////////////////////////////////////////
 SCENARIO("Path solving", "[puzzler]")
 {
-  spdlog::set_level(spdlog::level::off);
+  spdlog::set_level(spdlog::level::info);
 
   GIVEN("A 5x5 grid, a set of 3 goals, and a buffer size of 6")
   {
@@ -102,6 +104,11 @@ SCENARIO("Path solving", "[puzzler]")
 
     auto const test_goal_list = pnkd::goal_list_t{goals};
 
+    for (const auto &goal : test_goal_list)
+    {
+      spdlog::info(goal);
+    }
+
     constexpr std::size_t buffer_size = 6;
 
     WHEN(" the the game state is initialised and the puzzler activated")
@@ -110,6 +117,8 @@ SCENARIO("Path solving", "[puzzler]")
 
       auto puzzler = pnkd::puzzler{initial_state};
       auto const solutions = puzzler.solve();
+
+      spdlog::info(solutions.size());
 
       THEN(" the optimal solutions are identified")
       {
