@@ -21,6 +21,7 @@
 #include "gui/gui.hpp"
 #include "utils/file_utils.hpp"
 #include "utils/string_utils.hpp"
+#include "utils/config.hpp"
 
 
 using namespace std::chrono_literals;
@@ -104,17 +105,13 @@ auto main(int argc, const char **argv) -> int
   // Get the user-specified sleep duration, if present - default to 1 second
   std::size_t sleep_for = args.at("--sleep").isLong() ? args.at("--sleep").asLong() : 1;
 
-  // Start watching the screenshots folder
-  auto previous_image_path = std::filesystem::path{};
+  // Load the config file
+  auto config_path = pnkd::cfg::locate_config();
+  auto config_json = pnkd::cfg::load_config(config_path);
 
+  // Start the gui, or start watching if in headless mode
   bool const headless = args.at("--headless").asBool();
-
-  if (!headless)
-  {
-    // Start the gui - this will handle the watcher, etc.
-    pnkd::gui::start();
-
-  } else
+  if (headless)
   {
     // Start the watcher directly
     auto watcher = pnkd::watcher{
@@ -124,6 +121,11 @@ auto main(int argc, const char **argv) -> int
       sleep_for};
 
     watcher.start();
+
+  } else
+  {
+    // Start the gui - this will handle the watcher, etc.
+    pnkd::gui::start();
   }
 
   return EXIT_SUCCESS;

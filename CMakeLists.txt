@@ -14,6 +14,7 @@ project(
 # Create our executable
 add_executable(
   ${PROJECT_NAME}
+  external/sago/platform_folders.cpp
   src/main.cpp
   src/core/notifier.cpp
   src/core/ocr.cpp
@@ -28,6 +29,7 @@ add_executable(
   src/gui/config_bar.cpp
   src/gui/about.cpp
   src/gui/demo.cpp
+  src/utils/config.cpp
   src/utils/file_utils.cpp
   src/utils/string_utils.cpp
   src/utils/uuid.cpp)
@@ -68,20 +70,27 @@ conan_cmake_run(
   spdlog/1.8.2
   docopt.cpp/0.6.3
   imgui-sfml/2.1@bincrafters/stable
+  nlohmann_json/3.9.1
   BASIC_SETUP
   CMAKE_TARGETS
   BUILD
   missing)
 
 # Add the include directory to the target
-target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(
+  ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include
+                          ${PROJECT_SOURCE_DIR}/external)
 
 # Link libraries to executable
 target_link_libraries(
   ${PROJECT_NAME}
-  PRIVATE CONAN_PKG::spdlog CONAN_PKG::docopt.cpp CONAN_PKG::opencv
-          CONAN_PKG::tesseract CONAN_PKG::libarchive CONAN_PKG::imgui-sfml)
+  PRIVATE CONAN_PKG::spdlog
+          CONAN_PKG::docopt.cpp
+          CONAN_PKG::opencv
+          CONAN_PKG::tesseract
+          CONAN_PKG::libarchive
+          CONAN_PKG::imgui-sfml
+          CONAN_PKG::nlohmann_json)
 
 # +--------------------+
 # | Post-build actions |

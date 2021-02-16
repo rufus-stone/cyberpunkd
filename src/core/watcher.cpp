@@ -92,18 +92,18 @@ auto watcher::start() -> bool
     // Create our initial game state
     auto const initial_state = pnkd::game_state_t{grid, goal_list, this->m_buffer_size};
 
-    // Create a puzzler and solve asynchronously
+    // Create a puzzler
     auto puzzler = pnkd::puzzler{initial_state};
 
-
+    // Solve asynchronously
     auto fut = std::async(std::launch::async, &puzzler::solve, puzzler);
     auto const solutions = fut.get();
 
     // TODO: Inform user of optimal solutions
     pnkd::show_solutions(solutions);
 
+    // How long did it take?
     auto const finish = std::chrono::high_resolution_clock::now();
-
     auto const nanoseconds_taken = (finish - start);
     auto const milliseconds_taken = std::chrono::duration<double, std::milli>(nanoseconds_taken).count();
 
@@ -111,7 +111,7 @@ auto watcher::start() -> bool
 
     this->m_previous_image_path = latest_image_path;
 
-    std::this_thread::sleep_for(1s); // Give it a second before checking for new screenshots, to avoid hammering the CPU
+    std::this_thread::sleep_for(std::chrono::seconds{this->m_sleep_for}); // Give it at least a second before checking for new screenshots, to avoid hammering the CPU
   }
 
   return true;
@@ -119,6 +119,7 @@ auto watcher::start() -> bool
 
 auto watcher::stop() -> void
 {
+  spdlog::info("Stopping...");
   this->m_should_watch = false;
 }
 
