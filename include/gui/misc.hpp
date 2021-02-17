@@ -6,11 +6,24 @@
 namespace pnkd::gui
 {
 
-// Helper to display a little (?) mark which shows a tooltip when hovered.
-// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.txt)
+// Helper to display a little (?) mark which shows a tooltip when hovered
 inline auto help_marker(const char *desc) -> void
 {
   ImGui::TextDisabled("(?)");
+  if (ImGui::IsItemHovered())
+  {
+    ImGui::BeginTooltip();
+    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0F);
+    ImGui::TextUnformatted(desc);
+    ImGui::PopTextWrapPos();
+    ImGui::EndTooltip();
+  }
+}
+
+
+// Helper to display a tooltip when hovering any widget
+inline auto tooltip(const char *desc) -> void
+{
   if (ImGui::IsItemHovered())
   {
     ImGui::BeginTooltip();

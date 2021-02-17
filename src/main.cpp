@@ -1,8 +1,10 @@
+#include <atomic>
 #include <filesystem>
 #include <sstream>
 #include <queue>
 
 #include <thread>
+#include <future>
 #include <chrono>
 
 #include <spdlog/spdlog.h>
@@ -105,10 +107,6 @@ auto main(int argc, const char **argv) -> int
   // Get the user-specified sleep duration, if present - default to 1 second
   std::size_t sleep_for = args.at("--sleep").isLong() ? args.at("--sleep").asLong() : 1;
 
-  // Load the config file
-  auto config_path = pnkd::cfg::locate_config();
-  auto config_json = pnkd::cfg::load_config(config_path);
-
   // Start the gui, or start watching if in headless mode
   bool const headless = args.at("--headless").asBool();
   if (headless)
@@ -124,9 +122,38 @@ auto main(int argc, const char **argv) -> int
 
   } else
   {
-    // Start the gui - this will handle the watcher, etc.
-    pnkd::gui::start();
+    std::atomic_bool stop_threads{false};
+    std::atomic_bool watcher_flag{false}; // This tells the watcher whether to monitor to screenshots or not
+
+    // Create a background thread to asynchronously run the watcher
+    auto fut = std::async(std::launch::async, [&stop_threads, &watcher_flag]() {
+      while (stop_threads == false)
+      {
+        if (watcher_flag)
+        {
+          spdlog::info("Watching..");
+        }
+        spdlog::info("Doing stuff..");
+        std::this_thread::sleep_for(1s);
+      }
+    });
+
+    spdlog::info("Starting gui...");
+
+    // Start the gui
+    pnkd::gui::start(watcher_flag);
+
+    spdlog::info("Stopped gui...");
+
+    // Tell background threads to stop
+    stop_threads = true;
+
+    // Cleanup
+    fut.get();
   }
+
+  spdlog::info("And we're done");
+
 
   return EXIT_SUCCESS;
 }

@@ -1,77 +1,22 @@
 #include "utils/config.hpp"
 
-#include <fstream>
-
-#include <spdlog/spdlog.h>
-
-#include "sago/platform_folders.h"
-
 namespace pnkd::cfg
 {
 
-using namespace std::string_view_literals;
-
-// A default config
-constexpr auto default_config = R"###({"tessdata_dir":"tessdata", "buffer_size":3, "sleep_for":1})###"sv;
-
-////////////////////////////////////////////////////////////////
-auto locate_config(std::filesystem::path const &custom_path) -> std::filesystem::path
+config_helper::config_helper()
 {
-  auto config_path = std::filesystem::path{};
-
-  // Are we using a custom config location?
-  if (!custom_path.empty())
-  {
-    config_path = custom_path;
-  } else
-  {
-    // Try to find the default location for a cyberpunkd config file for this platform
-    try
-    {
-      config_path = sago::getConfigHome(); // ~/.config on Linux,
-    } catch (...)
-    {
-      spdlog::error("Failed to find config location!");
-      return std::filesystem::path{};
-    }
-
-    config_path = config_path / "cyberpunkd" / "config.json";
-  }
-
-  spdlog::info("Looking for config file at: {}", config_path.string());
-
-  // Check if the path exists
-  if (!std::filesystem::exists(config_path))
-  {
-    spdlog::warn("Cannot find config file at: {} ... Attempting to create one...", config_path.string());
-
-    // Create a cyberpunkd directory if it does not already exist
-    try
-    {
-      std::filesystem::create_directories(config_path.parent_path());
-    } catch (std::filesystem::filesystem_error const &e)
-    {
-      spdlog::error(e.what());
-      return std::filesystem::path{};
-    }
-
-    // Write the default config to file
-    auto const default_config_json = json::parse(default_config);
-    auto config_file = std::ofstream{config_path};
-    config_file << default_config_json.dump(2);
-    config_file.close();
-  }
-
-  return config_path;
+  this->m_config_path = pnkd::cfg::config_helper::locate_config();
 }
 
+config_helper::config_helper(std::string const &config_path)
+{
+  this->m_config_path = pnkd::cfg::config_helper::locate_config(config_path);
+}
 
 ////////////////////////////////////////////////////////////////
-auto load_config(std::filesystem::path const &custom_path) -> json
+auto config_helper::load_config() -> json
 {
-  auto const path = locate_config(custom_path);
-
-  using json = nlohmann::json;
+  auto const path = this->m_config_path;
 
   // Does the path actually exist/can we see it?
   if (!std::filesystem::exists(path) || !std::filesystem::is_regular_file(path))
@@ -95,6 +40,8 @@ auto load_config(std::filesystem::path const &custom_path) -> json
 
     spdlog::info("Loaded config from file:\n{}", config_json.dump(2));
 
+    this->m_json = config_json;
+
     return config_json;
 
   } catch (nlohmann::detail::parse_error const &e)
@@ -102,6 +49,38 @@ auto load_config(std::filesystem::path const &custom_path) -> json
     spdlog::error("Failed to parse config JSON! : {}", e.what());
     return json{};
   }
+}
+
+auto config_helper::write_config(json const &j) -> bool
+{
+  auto const path = this->m_config_path;
+
+  // Check if the path exists
+  if (std::filesystem::exists(path))
+  {
+    spdlog::info("Writing config to file:\n{}", j.dump(2));
+    // Write the json to file
+    auto config_file = std::ofstream{path};
+    config_file << j.dump(2);
+    config_file.close();
+
+    return true;
+
+  } else
+  {
+    spdlog::warn("Config file moved or deleted?");
+    return false;
+  }
+}
+
+auto config_helper::config_path() const -> std::filesystem::path
+{
+  return this->m_config_path;
+}
+
+auto config_helper::cfg_json() -> json &
+{
+  return this->m_json;
 }
 
 } // namespace pnkd::cfg

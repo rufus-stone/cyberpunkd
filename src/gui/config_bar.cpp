@@ -7,12 +7,15 @@
 #include <spdlog/spdlog.h>
 
 #include "gui/state.hpp"
-#include "gui/utils.hpp"
+#include "gui/misc.hpp"
 
 #include "utils/file_utils.hpp"
+#include "core/watcher.hpp"
 
 namespace pnkd::gui
 {
+
+using namespace std::chrono_literals;
 
 static constexpr auto screenshot_dir_helper_msg = R"(Specify the path to the directory containing your game screenshots.
 
@@ -23,25 +26,33 @@ C:\Program Files (x86)\Steam\userdata\<your_steam_ID>\760\remote\1091500\screens
 
 auto check_and_update(pnkd::gui::state &g) -> bool
 {
-  g.show_screenshot_dir_confirmation = true;
-
   if (!g.screenshot_dir.empty())
   {
     if (pnkd::is_valid_folder(g.screenshot_dir))
     {
       spdlog::info("Folder looks good!");
       g.screenshot_dir_confirmation_msg = "Path looks good";
+
+      // Update the config json with the valid screenshot path
+      g.cfg_helper.cfg_json()["screenshot_dir"] = g.screenshot_dir;
+
       return true;
     } else
     {
       spdlog::error("Nope!");
       g.screenshot_dir_confirmation_msg = "Path appears invalid";
+
+      // Clear the screenshot path from the config json
+      g.cfg_helper.cfg_json()["screenshot_dir"].clear();
       return false;
     }
   } else
   {
     spdlog::warn("No folder specified!");
     g.screenshot_dir_confirmation_msg = "No path specified!";
+
+    // Clear the screenshot path from the config json
+    g.cfg_helper.cfg_json()["screenshot_dir"].clear();
     return false;
   }
 }
@@ -62,6 +73,8 @@ auto config_bar(pnkd::gui::state &g) -> void
     ImGui::Separator();
     ImGui::Spacing();
 
+    ImGui::Text("Cyberware OS:");
+    ImGui::Spacing();
     ImGui::SliderInt("Buffer size", &g.buffer_size, 1, 10);
     ImGui::SameLine();
     pnkd::gui::help_marker(R"(The buffer size of your in-game operating system)");
@@ -81,7 +94,7 @@ auto config_bar(pnkd::gui::state &g) -> void
     ImGui::Spacing();
 
     ImGui::Text("Refresh rate:");
-    ImGui::SliderInt("Seconds", &g.scan_timer, 1, 10);
+    ImGui::SliderInt("Seconds", &g.sleep_for, 1, 10);
     ImGui::SameLine();
     pnkd::gui::help_marker(R"(How many seconds to wait before re-checking the screenshots directory for new images)");
 
@@ -89,14 +102,58 @@ auto config_bar(pnkd::gui::state &g) -> void
     ImGui::Separator();
     ImGui::Spacing();
 
-    if (ImGui::Button("Breach"))
+
+    if (g.breach_button_pushed)
     {
-      if (check_and_update(g))
+      ImGui::PushStyleColor(ImGuiCol_Button, g.stop_breach_colour);
+    } else
+    {
+      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26F, 0.59F, 0.98F, 0.40F));
+    }
+    if (ImGui::Button(g.breach_button_text.c_str()))
+    {
+      // Are we already breaching? If so, stop
+      if (g.breach_button_pushed)
       {
-        // Start monitoring and trigger async puzzler
-        spdlog::info("Breaching...");
+        // Toggle the button state
+        g.breach_button_pushed = !g.breach_button_pushed;
+        g.breach_button_text = "Breach";
+
+        // Stop showing screenshot_dir confirmation
+        g.show_screenshot_dir_confirmation = false;
+
+        // Tell the watcher to stop
+        *(g.watcher_flag) = false;
+
+      } else
+      {
+        // Show screenshot_dir confirmation
+        g.show_screenshot_dir_confirmation = true;
+
+        if (check_and_update(g))
+        {
+          // Start monitoring and trigger async puzzler
+          spdlog::info("Breaching...");
+          auto watcher = pnkd::watcher{
+            g.cfg_helper.cfg_json()["screenshot_dir"], // SHould avoid implicit conversions
+            g.cfg_helper.cfg_json()["tessdata_dir"],
+            g.cfg_helper.cfg_json()["buffer_size"],
+            g.cfg_helper.cfg_json()["sleep_for"]};
+
+          // Tell the watcher to start
+          *(g.watcher_flag) = true;
+
+          // Toggle the button state
+          g.breach_button_pushed = !g.breach_button_pushed;
+          g.breach_button_text = " Stop ";
+
+          //auto fut = std::async(std::launch::async, &pnkd::watcher::start, watcher); // Why does this block?
+          // For some reason creating the thread here blocks, but if we create a thread in main() BEFORE starting the gui, it works
+        }
       }
     }
+    ImGui::PopStyleColor(1);
+    tooltip("asdf");
 
     if (g.show_screenshot_dir_confirmation)
     {
