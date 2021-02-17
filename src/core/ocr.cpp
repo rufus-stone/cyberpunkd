@@ -94,6 +94,12 @@ auto ocr_t::get_goal_list_from_img(cv::Mat const &raw_img) -> pnkd::goal_list_t
 }
 
 
+auto ocr_t::set_tessdata_dir(std::string const &s) -> void
+{
+  this->m_tessdata_dir = s;
+}
+
+
 /*
 auto preprocess_image(cv::Mat const &raw_img, double w_scale, double x_scale, double h_scale, double y_scale, double thresh) -> cv::Mat
 {

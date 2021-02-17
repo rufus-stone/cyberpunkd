@@ -1,5 +1,8 @@
 #include "gui/gui.hpp"
 
+#include <future>
+#include <chrono>
+
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
@@ -8,6 +11,7 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
+#include "core/watcher.hpp"
 #include "gui/about.hpp"
 #include "gui/config_bar.hpp"
 #include "gui/state.hpp"
@@ -19,7 +23,9 @@
 namespace pnkd::gui
 {
 
-auto start(std::atomic_bool &watcher_flag) -> void
+using namespace std::chrono_literals;
+
+auto start() -> void
 {
   // How big is our screen?
   unsigned int const w = sf::VideoMode::getDesktopMode().width;
@@ -58,7 +64,52 @@ auto start(std::atomic_bool &watcher_flag) -> void
   g.sleep_for = pnkd::json::int_optional(g.cfg_helper.cfg_json(), "sleep_for").value_or(1);
   g.buffer_size = pnkd::json::int_optional(g.cfg_helper.cfg_json(), "buffer_size").value_or(3);
   g.screenshot_dir = pnkd::json::string_optional(g.cfg_helper.cfg_json(), "screenshot_dir").value_or("");
-  g.watcher_flag = &watcher_flag;
+  g.tessdata_dir = pnkd::json::string_optional(g.cfg_helper.cfg_json(), "tessdata_dir").value_or("tessdata");
+
+  // Flag to trigger background threads to finish up
+  std::atomic_bool stop_threads{false};
+
+  // Create background thread to handle puzzle solving
+  auto fut = std::async(std::launch::async, [&stop_threads, &g]() {
+    auto screenshot_dir = g.get_screenshot_dir();
+    auto tessdata_dir = g.get_tessdata_dir();
+    auto sleep_for = g.get_sleep_for();
+    auto buffer_size = g.get_buffer_size();
+
+    // Create a watcher object
+    auto watcher = pnkd::watcher{
+      screenshot_dir,
+      tessdata_dir,
+      static_cast<std::size_t>(buffer_size),
+      static_cast<std::size_t>(sleep_for)};
+
+    while (stop_threads == false)
+    {
+      screenshot_dir = g.get_screenshot_dir();
+      tessdata_dir = g.get_tessdata_dir();
+      sleep_for = g.get_sleep_for();
+      buffer_size = g.get_buffer_size();
+
+      if (g.start_watcher)
+      {
+        spdlog::info("Starting watcher - screenshots_path: {} / tessdata_dir: {} / buffer_size: {} / sleep_for: {}", screenshot_dir, tessdata_dir, buffer_size, sleep_for);
+
+        watcher.do_once();
+
+        g.start_watcher = false;
+      }
+
+      if (g.stop_watcher)
+      {
+        spdlog::info("Stopping watcher...");
+        g.stop_watcher = false;
+        watcher.forget_previous_image();
+      }
+
+      spdlog::info("Sleeping {}s...", sleep_for);
+      std::this_thread::sleep_for(std::chrono::seconds{sleep_for});
+    }
+  });
 
   // Clock to track frame render times
   auto deltaClock = sf::Clock{};
@@ -105,6 +156,10 @@ auto start(std::atomic_bool &watcher_flag) -> void
     app.display();
   }
 
+
+  stop_threads = true;
+  fut.get();
+
   ImGui::SFML::Shutdown();
 }
 
@@ -119,7 +174,7 @@ auto cyberpunk_theme() -> void
   // Colour palette
   // clang-format off
   auto *colors = style.Colors;
-  colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+  colors[ImGuiCol_Text]                   = ImVec4(1.00F, 1.00f, 1.00f, 1.00f);
   colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
   colors[ImGuiCol_WindowBg]               = ImVec4(0.06f, 0.06f, 0.06f, 0.94f);
   colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);

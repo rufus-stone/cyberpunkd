@@ -86,6 +86,7 @@ auto config_bar(pnkd::gui::state &g) -> void
     ImGui::Text("Screenshot folder location:");
     if (ImGui::InputTextWithHint("Path", "/path/to/screenshot/folder", &g.screenshot_dir, ImGuiInputTextFlags_EnterReturnsTrue))
     {
+      g.show_screenshot_dir_confirmation = true;
       check_and_update(g);
     }
     ImGui::SameLine();
@@ -105,10 +106,14 @@ auto config_bar(pnkd::gui::state &g) -> void
 
     if (g.breach_button_pushed)
     {
-      ImGui::PushStyleColor(ImGuiCol_Button, g.stop_breach_colour);
+      ImGui::PushStyleColor(ImGuiCol_Button, g.active_button);
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, g.active_button_hovered);
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive, g.active_button_active);
     } else
     {
-      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.26F, 0.59F, 0.98F, 0.40F));
+      ImGui::PushStyleColor(ImGuiCol_Button, g.inactive_button);
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, g.inactive_button_hovered);
+      ImGui::PushStyleColor(ImGuiCol_ButtonActive, g.inactive_button_active);
     }
     if (ImGui::Button(g.breach_button_text.c_str()))
     {
@@ -123,7 +128,7 @@ auto config_bar(pnkd::gui::state &g) -> void
         g.show_screenshot_dir_confirmation = false;
 
         // Tell the watcher to stop
-        *(g.watcher_flag) = false;
+        g.stop_watcher = true;
 
       } else
       {
@@ -134,26 +139,17 @@ auto config_bar(pnkd::gui::state &g) -> void
         {
           // Start monitoring and trigger async puzzler
           spdlog::info("Breaching...");
-          auto watcher = pnkd::watcher{
-            g.cfg_helper.cfg_json()["screenshot_dir"], // SHould avoid implicit conversions
-            g.cfg_helper.cfg_json()["tessdata_dir"],
-            g.cfg_helper.cfg_json()["buffer_size"],
-            g.cfg_helper.cfg_json()["sleep_for"]};
 
           // Tell the watcher to start
-          *(g.watcher_flag) = true;
+          g.start_watcher = true;
 
           // Toggle the button state
           g.breach_button_pushed = !g.breach_button_pushed;
           g.breach_button_text = " Stop ";
-
-          //auto fut = std::async(std::launch::async, &pnkd::watcher::start, watcher); // Why does this block?
-          // For some reason creating the thread here blocks, but if we create a thread in main() BEFORE starting the gui, it works
         }
       }
     }
-    ImGui::PopStyleColor(1);
-    tooltip("asdf");
+    ImGui::PopStyleColor(3);
 
     if (g.show_screenshot_dir_confirmation)
     {

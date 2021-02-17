@@ -122,34 +122,8 @@ auto main(int argc, const char **argv) -> int
 
   } else
   {
-    std::atomic_bool stop_threads{false};
-    std::atomic_bool watcher_flag{false}; // This tells the watcher whether to monitor to screenshots or not
-
-    // Create a background thread to asynchronously run the watcher
-    auto fut = std::async(std::launch::async, [&stop_threads, &watcher_flag]() {
-      while (stop_threads == false)
-      {
-        if (watcher_flag)
-        {
-          spdlog::info("Watching..");
-        }
-        spdlog::info("Doing stuff..");
-        std::this_thread::sleep_for(1s);
-      }
-    });
-
-    spdlog::info("Starting gui...");
-
     // Start the gui
-    pnkd::gui::start(watcher_flag);
-
-    spdlog::info("Stopped gui...");
-
-    // Tell background threads to stop
-    stop_threads = true;
-
-    // Cleanup
-    fut.get();
+    pnkd::gui::start(); // Eventually we'll need to pass any custom tessdata dir etc to this function
   }
 
   spdlog::info("And we're done");

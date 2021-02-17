@@ -23,6 +23,7 @@ public:
   auto get_string_from_image(cv::Mat const &raw_img, std::string const &char_list = "BD5E91C7AF \n") -> std::string;
   auto get_grid_from_img(cv::Mat const &raw_img) -> std::vector<std::string>;
   auto get_goal_list_from_img(cv::Mat const &raw_img) -> pnkd::goal_list_t;
+  auto set_tessdata_dir(std::string const &s) -> void;
 
 
   static auto fix_ocr(std::vector<std::string> const &input) -> std::vector<std::string>
